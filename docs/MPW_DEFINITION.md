@@ -16,7 +16,10 @@ then an MPW result is:
 - `minimumWitnesses` = ALL subsets S ⊆ D with |S| = `minimumCardinality` and `isSufficient(S)` true,
 - `coMinimumWitnesses` = same set as `minimumWitnesses` (I keep both names so it's explicit I return every tie, not one example).
 
-That's a **globally minimum-cardinality** subset. I prove it by exhausting the exposed protocol space in increasing cardinality order (see `src/mpwWitness.js`).
+notation: θ_A = Lab A, θ_B = Lab B, H = dims where they differ.
+hybrid θ_(A←B,S): start from θ_A, replace only dims in S with θ_B values.
+sufficient iff C(θ_(A←B,S)) = C(θ_B). cardinality = min |S| over sufficient S, return all ties.
+canonical cert evaluates all 16 even if min found early (see `src/mpwVerify.js`).
 
 ## 2. What I don't confuse it with
 
