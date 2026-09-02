@@ -9,9 +9,22 @@ const types = { ".html": "text/html", ".js": "text/javascript", ".json": "applic
 
 createServer(async (req, res) => {
   try {
-    const path = normalize(join(root, req.url === "/" ? "public/index.html" : decodeURIComponent(req.url.split("?")[0])));
-    if (!path.startsWith(normalize(root))) { res.writeHead(403); res.end(); return; }
-    const data = await readFile(path);
+    const urlPath = decodeURIComponent(req.url.split("?")[0]);
+    const candidates = [
+      normalize(join(root, req.url === "/" ? "public/index.html" : urlPath)),
+      normalize(join(root, "public", urlPath)),
+    ];
+    let data = null;
+    let path = candidates[0];
+    for (const c of candidates) {
+      if (!c.startsWith(normalize(root))) continue;
+      try {
+        data = await readFile(c);
+        path = c;
+        break;
+      } catch {}
+    }
+    if (data === null) throw new Error("missing");
     res.writeHead(200, { "Content-Type": types[extname(path)] ?? "application/octet-stream" });
     res.end(data);
   } catch {
