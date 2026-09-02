@@ -1,0 +1,35 @@
+# I keep this generic for now since I haven't locked in a stack yet
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Env / secrets - I never commit these
+.env
+.env.*
+*.pem
+*.key
+
+# Node (in case I go with TS/JS)
+node_modules/
+dist/
+build/
+*.log
+
+# Python (in case I go with Python)
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Temp
+tmp/
+temp/
+*.tmp
