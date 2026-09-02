@@ -8,3 +8,7 @@ interval: 95% percentile, sorted means, low = idx floor(0.025*N), high = idx cei
 rule: MODEL_A iff ciLow > 0, MODEL_B iff ciHigh < 0, else INCONCLUSIVE
 never from point estimate. full precision inside, round only for display.
 units: accuracies in percent, differences in percentage points (pp).
+
+scope: CI covers resampling items with fixed category mix only.
+not covered: inference repeats, training, deployment, future benchmarks, general capability.
+must repeat this limit in README, docs, and the certificate.

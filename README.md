@@ -16,6 +16,9 @@ MPW rule: I locked in what I mean by Minimal Protocol Witness in `docs/MPW_DEFIN
 Fixture: I locked in our setup in `src/mpwFixture.js` — 400 items, 4 strata, 4 dims, 16 combos. Lab A is 8192/tolerant/one-retry/standard, Lab B is 2048/strict/no-retry/restricted. All synthetic.
 Simulator: rebuilt around `simulateItem` in `src/mpwSimulator.js` — hashed draws, no order dependence, parser only filters accepts. params in `docs/SIM_PARAMS.md`. uncertainty in `docs/UNCERTAINTY.md` — 10k stratified paired bootstrap, CI-only rule. Lab A -> MODEL_A, Lab B -> MODEL_B, only reasoning_budget flips solo. 30 passing.
 
+## Limits
+my CIs only cover resampling these items with the same category mix. not inference repeats, training, deployment, future benchmarks, or general capability. same note lives in `docs/UNCERTAINTY.md` and will go in the certificate.
+
 ## How I run it
 - I need Node 20+ (I'm on Node 24).
 - I run `npm test` to verify the deterministic core.
