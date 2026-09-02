@@ -11,11 +11,12 @@ Right now it's just a clean starter so I have a good place to work from. I'll ad
 
 ## Where I'm at
 Step 1: I set up the repo with a README and gitignore.
-Prompt 01: I added my deterministic core in vanilla JS (no deps) — I can generate item-level outcomes from a seed, rebuild them from counts, run paired stats with CI/p-value, and classify A>B / B>B / inconclusive. I verified it with `npm test` (9 tests passing). The LLM never calculates — WebMCP tools will call this code later.
+Prompt 01: I added my deterministic core in vanilla JS (no deps) — I can generate item-level outcomes from a seed, rebuild them from counts, run paired stats with CI/p-value, and classify A>B / B>B / inconclusive. The LLM never calculates — WebMCP tools will call this code later.
+MPW rule: I locked in what I mean by Minimal Protocol Witness in `docs/MPW_DEFINITION.md` — I mean the globally smallest set of exposed differences that flips me to the target conclusion, not just inclusion-minimal, and I return every tie. I built that search in `src/mpwWitness.js` and I prove the minimum with exhaustive counts. I verified it with `npm test` (17 tests passing).
 
 ## How I run it
 - I need Node 20+ (I'm on Node 24).
 - I run `npm test` to verify the deterministic core.
 
 ## Next
-I'm going to add the witness search — I want to enumerate exposed protocol subsets, test sufficiency, prove the smallest one, return every co-minimum, and write a reproducible certificate.
+I'm going to wire the witness search to real hybrid protocols and stats, then write a reproducible Reconciliation Certificate that lists everything my claim is conditional on.
