@@ -25,6 +25,7 @@ test("schemas are narrow", () => {
   for (const t of TOOLS) {
     assert.equal(t.inputSchema.additionalProperties, false);
     assert.ok(Array.isArray(t.inputSchema.required));
+    assert.equal(t.annotations?.readOnlyHint, true);
   }
   assert.deepEqual(byName("run_counterfactual").inputSchema.required, ["subset"]);
   assert.deepEqual(byName("verify_witness").inputSchema.required, ["candidateSubset"]);
@@ -59,4 +60,22 @@ test("evidence stays small", async () => {
   const r = (await ev({ subset: [] })).result;
   assert.ok(r.sample.length <= 5);
   assert.equal(r.strata.length, 4);
+});
+
+test("registration follows the official sample shape", async () => {
+  const seen = [];
+  globalThis.document = {
+    modelContext: { registerTool: async (tool) => void seen.push(tool) },
+  };
+  try {
+    const { registerWebMcpTools } = await import("../src/mpwTools.js");
+    const r = await registerWebMcpTools();
+    assert.equal(r.registered.length, 4);
+    for (const t of seen) {
+      assert.ok(t.name && t.description && t.inputSchema && typeof t.execute === "function");
+      assert.equal(t.annotations?.readOnlyHint, true);
+    }
+  } finally {
+    delete globalThis.document;
+  }
 });

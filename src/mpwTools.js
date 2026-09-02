@@ -15,12 +15,15 @@ function asSubset(v) {
   return [...v];
 }
 
+export const READONLY = { readOnlyHint: true };
+
 export const TOOLS = [
   {
     name: "read_dispute",
     description:
       "Summarizes the Lab A vs Lab B evaluation dispute: models, benchmark makeup, exposed protocol dimensions, and each lab's declared headline. Good starting context before running experiments.",
     inputSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
+    annotations: { ...READONLY },
     execute: async () => ({ ok: true, dispute: dispute() }),
   },
   {
@@ -35,6 +38,7 @@ export const TOOLS = [
       required: ["subset"],
       additionalProperties: false,
     },
+    annotations: { ...READONLY },
     execute: async (args = {}) => {
       try {
         rejectExtra(args, ["subset"]);
@@ -58,6 +62,7 @@ export const TOOLS = [
       required: ["subset"],
       additionalProperties: false,
     },
+    annotations: { ...READONLY },
     execute: async (args = {}) => {
       try {
         rejectExtra(args, ["subset", "stratum", "limit"]);
@@ -82,6 +87,7 @@ export const TOOLS = [
       required: ["candidateSubset"],
       additionalProperties: false,
     },
+    annotations: { ...READONLY },
     execute: async (args = {}) => {
       try {
         rejectExtra(args, ["candidateSubset"]);
@@ -102,7 +108,7 @@ export async function registerWebMcpTools() {
   if (!mc || typeof mc.registerTool !== "function") return { registered: [], reason: "no-webmcp" };
   const out = [];
   for (const t of TOOLS) {
-    await mc.registerTool({ name: t.name, description: t.description, inputSchema: t.inputSchema, execute: t.execute });
+    await mc.registerTool({ name: t.name, description: t.description, inputSchema: t.inputSchema, annotations: t.annotations, execute: t.execute });
     out.push(t.name);
   }
   return { registered: out };

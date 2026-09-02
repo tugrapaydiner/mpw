@@ -1,9 +1,10 @@
-# webmcp (pinned 2026-09-02, reverify before release)
+# webmcp (verified 2026-09-02 vs official docs, reverify before release)
 
-spec: W3C WebML CG draft report, not a standard. docs: webmachinelearning.github.io/webmcp, developer.chrome.com/docs/ai/webmcp.
-surface: `document.modelContext` primary, `navigator.modelContext` fallback (deprecated chrome 150). guarded, never throws without it.
-registration: imperative `registerTool({name, description, inputSchema, execute})` from the top-level page only.
-needs secure context (localhost ok) + same origin. no iframe discovery, no cross-origin tools, no declarative api.
+official: https://learn.chatgpt.com/docs/webmcp (site tools = ChatGPT's WebMCP impl).
+confirmed: Sol + Terra support it, Luna disabled. desktop app built-in browser, Work + Codex discover. not in Enterprise/Edu, rollout-dependent, update the app.
+supported: top-level-page JS registration only. NOT supported: declarative api, iframe tools (same-origin included).
+shape follows the official sample exactly: `document.modelContext.registerTool({name, description, inputSchema, annotations, execute})`, guarded feature-detect, readOnlyHint set, narrow inputs, enough-to-verify outputs.
+broader spec/chrome may offer more — not relied on.
 
 tools (exactly four): read_dispute, run_counterfactual, inspect_evidence, verify_witness.
 service in `src/mpwService.js` shared by ui (`public/app.js`) + tools (`src/mpwTools.js`).
