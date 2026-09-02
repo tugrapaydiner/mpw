@@ -3,9 +3,26 @@ import {
   EXPOSED_DIMENSIONS,
   LAB_A_PROTOCOL,
   LAB_B_PROTOCOL,
+  SOURCE_PUBLICATIONS,
   listAllProtocolCombinations,
 } from "./mpwFixture.js";
 import { evaluateSubset, conclusionForSubset } from "./mpwSimulator.js";
+
+// each source must reproduce its own headline first, else integrity failure
+export function checkSourceIntegrity(declarations = SOURCE_PUBLICATIONS) {
+  const checks = declarations.map((d) => {
+    const recomputed = conclusionForSubset([...d.subset]);
+    return { source: d.source, declared: d.declared, recomputed, match: recomputed === d.declared };
+  });
+  const bad = checks.filter((c) => !c.match);
+  if (bad.length) {
+    const err = new Error(`SOURCE_INTEGRITY_FAILURE: ${bad.map((b) => b.source).join(", ")}`);
+    err.code = "SOURCE_INTEGRITY_FAILURE";
+    err.checks = checks;
+    throw err;
+  }
+  return { status: "OK", checks };
+}
 
 function checkHybrid(subset, protocol) {
   for (const d of EXPOSED_DIMENSIONS) {
@@ -14,7 +31,8 @@ function checkHybrid(subset, protocol) {
   }
 }
 
-export function verifyCanonical() {
+export function verifyCanonical(declarations = SOURCE_PUBLICATIONS) {
+  checkSourceIntegrity(declarations);
   const full = [...EXPOSED_DIMENSIONS];
   const target = conclusionForSubset(full);
   const base = conclusionForSubset([]);
@@ -111,7 +129,8 @@ export function verifyWitness({ candidateSubset, exposedDimensions, isSufficient
   };
 }
 
-export function verifyCandidateWitness(candidateSubset) {
+export function verifyCandidateWitness(candidateSubset, declarations = SOURCE_PUBLICATIONS) {
+  checkSourceIntegrity(declarations);
   const full = [...EXPOSED_DIMENSIONS];
   const target = conclusionForSubset(full);
   return verifyWitness({

@@ -48,6 +48,16 @@ export const REASONING_BUDGET_LABELS = {
   2048: "low",
 };
 
+// declared headlines per source pub, checked before any reconciliation
+export const SOURCE_PUBLICATIONS = [
+  { source: "Lab A", subset: [], declared: "MODEL_A" },
+  {
+    source: "Lab B",
+    subset: ["reasoning_budget", "answer_parser", "retry_policy", "tool_access"],
+    declared: "MODEL_B",
+  },
+];
+
 export function buildBenchmarkItems() {
   const items = [];
   let globalIndex = 0;

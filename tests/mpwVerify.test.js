@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { verifyCanonical, verifyCandidateWitness, verifyWitness } from "../src/mpwVerify.js";
+import { verifyCanonical, verifyCandidateWitness, verifyWitness, checkSourceIntegrity } from "../src/mpwVerify.js";
 import { protocolForSubset, LAB_A_PROTOCOL, LAB_B_PROTOCOL } from "../src/mpwFixture.js";
 
 test("all 16 evaluated even though min is found early", () => {
@@ -36,8 +36,7 @@ test("verifier hardcodes no answer", async () => {
   assert.ok(!src.includes("MODEL_A") && !src.includes("MODEL_B") && !src.includes("INCONCLUSIVE"));
 });
 
-test("candidate statuses work, never forcing an answer", () => {
-  assert.equal(verifyCandidateWitness(["reasoning_budget"]).status, "VERIFIED");
+test("candidate statuses work, never forcing an answer", () => {  assert.equal(verifyCandidateWitness(["reasoning_budget"]).status, "VERIFIED");
   assert.equal(verifyCandidateWitness(["reasoning_budget", "answer_parser"]).status, "NON_MINIMUM");
   assert.equal(verifyCandidateWitness([]).status, "NOT_SUFFICIENT");
   const none = verifyWitness({
@@ -56,4 +55,20 @@ test("candidate statuses work, never forcing an answer", () => {
   assert.equal(multi.status, "VERIFIED");
   assert.equal(multi.minimumCardinality, 1);
   assert.equal(multi.minimumWitnesses.length, 2);
+});
+
+test("sources must reproduce their own headlines first", () => {
+  assert.equal(checkSourceIntegrity().status, "OK");
+  assert.throws(
+    () =>
+      verifyCanonical([
+        { source: "Lab A", subset: [], declared: "MODEL_B" },
+        {
+          source: "Lab B",
+          subset: ["reasoning_budget", "answer_parser", "retry_policy", "tool_access"],
+          declared: "MODEL_B",
+        },
+      ]),
+    /SOURCE_INTEGRITY_FAILURE/
+  );
 });
