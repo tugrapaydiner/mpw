@@ -24,3 +24,36 @@ export function buildPublicationManifestCore({ source, protocol, declared, seeds
 export function canonicalManifest(core) {
   return canonicalize(core);
 }
+
+// ordering: items by id, receipts by protocol/item/model, dims sorted,
+// table by cardinality then lexicographic. arrays otherwise keep order.
+export const canonicalDims = (dims) => [...dims].sort();
+export const protocolIdForSubset = (subset) => [...subset].sort().join("+");
+
+export function sortItems(items) {
+  return [...items].sort((a, b) => String(a.id ?? a.itemId).localeCompare(String(b.id ?? b.itemId)));
+}
+
+export function sortReceipts(receipts) {
+  const pid = (r) =>
+    r.protocolId ?? (Array.isArray(r.subset) ? protocolIdForSubset(r.subset) : String(r.protocol ?? ""));
+  const iid = (r) => String(r.itemId ?? r.id ?? "");
+  const mid = (r) => String(r.modelId ?? r.model ?? "");
+  return [...receipts].sort(
+    (a, b) => pid(a).localeCompare(pid(b)) || iid(a).localeCompare(iid(b)) || mid(a).localeCompare(mid(b))
+  );
+}
+
+export function sortWitnessSubsets(subsets) {
+  return subsets
+    .map((s) => [...s].sort())
+    .sort((a, b) => a.length - b.length || a.join(",").localeCompare(b.join(",")));
+}
+
+export function sortVerificationTable(rows) {
+  return rows
+    .map((r) => ({ ...r, subset: [...r.subset].sort() }))
+    .sort(
+      (a, b) => a.subset.length - b.subset.length || a.subset.join(",").localeCompare(b.subset.join(","))
+    );
+}
