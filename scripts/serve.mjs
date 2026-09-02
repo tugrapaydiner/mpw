@@ -1,9 +1,10 @@
 // tiny static server, no deps. localhost counts as secure context.
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
-import { extname, join, normalize } from "node:path";
+import { extname, join, normalize, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".css": "text/css" };
 
 createServer(async (req, res) => {
