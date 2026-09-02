@@ -24,4 +24,4 @@ my CIs only cover resampling these items with the same category mix. not inferen
 - I run `npm test` to verify the deterministic core.
 
 ## Next
-I run the full 16-protocol table next and write my certificate.
+BLOCKED — MANUAL WEBMCP TEST REQUIRED (`docs/WEBMCP_MANUAL_TEST.md`). mocks don't count, stopping here till a human verifies on public https.
