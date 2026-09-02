@@ -1,0 +1,12 @@
+{
+  "name": "mpw",
+  "version": "0.1.0",
+  "description": "Minimal Protocol Witness - deterministic reconciliation core (WebMCP tools call this, the LLM never calculates)",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/mpwCore.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
