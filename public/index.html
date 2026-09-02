@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Minimal Protocol Witness</title>
+<style>
+body { font-family: system-ui, sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; }
+pre { background: #f4f4f4; padding: 1rem; overflow-x: auto; }
+button { margin: 0.25rem 0.5rem 0.25rem 0; }
+label { margin-right: 1rem; }
+</style>
+</head>
+<body>
+<h1>Minimal Protocol Witness</h1>
+<p id="webmcp-note">checking for WebMCP…</p>
+<h2>dispute</h2>
+<pre id="dispute">loading…</pre>
+<h2>run a hybrid</h2>
+<div id="dims"></div>
+<button id="run">run counterfactual</button>
+<pre id="counter"></pre>
+<h2>evidence</h2>
+<button id="ev">inspect evidence</button>
+<pre id="evidence"></pre>
+<h2>verify a witness</h2>
+<button id="verify">verify current selection</button>
+<pre id="witness"></pre>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

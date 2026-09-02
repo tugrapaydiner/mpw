@@ -4,7 +4,8 @@
   "description": "Minimal Protocol Witness - deterministic reconciliation core (WebMCP tools call this, the LLM never calculates)",
   "type": "module",
   "scripts": {
-    "test": "node --test \"tests/mpwCore.test.js\" \"tests/mpwWitness.test.js\" \"tests/mpwFixture.test.js\" \"tests/mpwSimulator.test.js\" \"tests/mpwBootstrap.test.js\" \"tests/mpwVerify.test.js\" \"tests/mpwManifest.test.js\" \"tests/mpwCertificate.test.js\""
+    "test": "node --test \"tests/mpwCore.test.js\" \"tests/mpwWitness.test.js\" \"tests/mpwFixture.test.js\" \"tests/mpwSimulator.test.js\" \"tests/mpwBootstrap.test.js\" \"tests/mpwVerify.test.js\" \"tests/mpwManifest.test.js\" \"tests/mpwCertificate.test.js\" \"tests/mpwWebmcp.test.js\"",
+    "start": "node scripts/serve.mjs"
   },
   "engines": {
     "node": ">=20"
