@@ -212,8 +212,57 @@ export function pairedStats(diffs) {
   return { n, mean, sd, se, ciLow, ciHigh, z, p, alpha: ALPHA, method: "paired-normal-approx" };
 }
 
-// I classify into opposite-establishable buckets. Threshold lives here so every
-// later step (hybrids, witness search, certificate) uses the same rule.
+// stratified paired bootstrap on Delta = A - B. mulberry32 PRNG, seed BOOT_SEED.
+export const BOOT_REPLICATES = 10000;
+export const BOOT_SEED = "mpw-boot-v1";
+
+export function stratifiedPairedBootstrap(outcomes, { seed = BOOT_SEED, replicates = BOOT_REPLICATES } = {}) {
+  if (!Array.isArray(outcomes) || outcomes.length === 0)
+    throw new Error("outcomes must be a non-empty array");
+  if (typeof seed !== "string" || seed.length === 0) throw new Error("seed must be set");
+  if (!Number.isInteger(replicates) || replicates < 1000)
+    throw new Error("replicates must be an integer >= 1000");
+  const groups = new Map();
+  for (const o of outcomes) {
+    if (!o || (o.a !== 0 && o.a !== 1) || (o.b !== 0 && o.b !== 1))
+      throw new Error("each outcome needs binary a/b");
+    if (typeof o.stratum !== "string" || !o.stratum) throw new Error("each outcome needs a stratum");
+    if (!groups.has(o.stratum)) groups.set(o.stratum, []);
+    groups.get(o.stratum).push(o);
+  }
+  const keys = [...groups.keys()].sort();
+  const lists = keys.map((k) => [...groups.get(k)].sort((x, y) => x.id.localeCompare(y.id)));
+  const n = outcomes.length;
+  let sum = 0;
+  for (const o of outcomes) sum += o.a - o.b;
+  const mean = sum / n;
+  const means = new Array(replicates);
+  for (let r = 0; r < replicates; r++) {
+    const rand = mulberry32(hashSeedString(`${seed}|${r}`));
+    let s = 0;
+    for (const g of lists) {
+      const m = g.length;
+      for (let k = 0; k < m; k++) {
+        const o = g[Math.floor(rand() * m)];
+        s += o.a - o.b;
+      }
+    }
+    means[r] = s / n;
+  }
+  means.sort((x, y) => x - y);
+  const ciLow = means[Math.floor(0.025 * replicates)];
+  const ciHigh = means[Math.ceil(0.975 * replicates) - 1];
+  return { n, mean, ciLow, ciHigh, replicates, seed, method: "stratified-paired-bootstrap" };
+}
+
+// CI-only rule on Delta = A - B. never uses the point estimate.
+export function classifyBootstrap({ ciLow, ciHigh }) {
+  if (!isFiniteNumber(ciLow) || !isFiniteNumber(ciHigh)) throw new Error("CI bounds must be finite");
+  if (ciLow > 0) return { conclusion: "MODEL_A", reason: "CI above 0" };
+  if (ciHigh < 0) return { conclusion: "MODEL_B", reason: "CI below 0" };
+  return { conclusion: "INCONCLUSIVE", reason: "CI covers 0" };
+}
+// legacy normal-approx buckets, kept for unit checks only.
 export function classifyConclusion(stats) {
   if (!stats || typeof stats !== "object") throw new Error("stats is required");
   const { mean, ciLow, ciHigh, p, alpha = ALPHA } = stats;

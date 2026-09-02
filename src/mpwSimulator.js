@@ -1,6 +1,6 @@
 // mechanistic item simulator, hashed draws, no order dependence
 import { buildBenchmarkItems, protocolForSubset } from "./mpwFixture.js";
-import { hashSeedString, pairedStats, classifyConclusion } from "./mpwCore.js";
+import { hashSeedString, stratifiedPairedBootstrap, classifyBootstrap, BOOT_SEED } from "./mpwCore.js";
 
 export const SIM_SEED = "mpw-canonical-v1";
 
@@ -83,14 +83,32 @@ export function simulateForSubset(subset, { seed = SIM_SEED } = {}) {
     const rB = simulateItem("MODEL_B", it, protocol, seed);
     const a = rA.finalCorrect ? 1 : 0;
     const b = rB.finalCorrect ? 1 : 0;
-    return { id: it.id, stratum: it.stratum, a, b, diff: b - a };
+    return { id: it.id, stratum: it.stratum, a, b, diff: a - b };
   });
 }
 
 export function evaluateSubset(subset, opts) {
   const outcomes = simulateForSubset(subset, opts);
-  const stats = pairedStats(outcomes.map((o) => o.diff));
-  const { conclusion } = classifyConclusion(stats);
+  const n = outcomes.length;
+  let sA = 0;
+  let sB = 0;
+  for (const o of outcomes) {
+    sA += o.a;
+    sB += o.b;
+  }
+  const boot = stratifiedPairedBootstrap(outcomes, { seed: BOOT_SEED });
+  const { conclusion } = classifyBootstrap(boot);
+  const stats = {
+    n,
+    accA: sA / n,
+    accB: sB / n,
+    mean: boot.mean,
+    ciLow: boot.ciLow,
+    ciHigh: boot.ciHigh,
+    replicates: boot.replicates,
+    seed: boot.seed,
+    method: boot.method,
+  };
   return { subset: [...subset], protocol: protocolForSubset(subset), outcomes, stats, conclusion };
 }
 
