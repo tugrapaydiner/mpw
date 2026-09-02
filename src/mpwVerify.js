@@ -48,3 +48,75 @@ export function verifyCanonical() {
     exhaustive: table.length === 2 ** full.length,
   };
 }
+
+// generic candidate check over any exposed set, never forces an answer
+export function verifyWitness({ candidateSubset, exposedDimensions, isSufficient }) {
+  if (!Array.isArray(candidateSubset) || !Array.isArray(exposedDimensions))
+    throw new Error("candidateSubset and exposedDimensions must be arrays");
+  if (typeof isSufficient !== "function") throw new Error("isSufficient must be a function");
+  const n = exposedDimensions.length;
+  if (n > 20) throw new Error("too many dims for exhaustive check");
+  const totalSubsets = 2 ** n;
+  const sufficient = [];
+  for (let mask = 0; mask < totalSubsets; mask++) {
+    const s = [];
+    for (let i = 0; i < n; i++) if (mask & (1 << i)) s.push(exposedDimensions[i]);
+    const v = isSufficient([...s]);
+    if (typeof v !== "boolean") throw new Error("isSufficient must return a boolean");
+    if (v) sufficient.push(s);
+  }
+  if (!sufficient.length)
+    return {
+      status: "UNRESOLVED",
+      minimumCardinality: null,
+      minimumWitnesses: [],
+      coMinimumWitnesses: [],
+      checkedCount: totalSubsets,
+      totalSubsets,
+      exhaustive: true,
+    };
+  const minimumCardinality = Math.min(...sufficient.map((s) => s.length));
+  const minimumWitnesses = sufficient.filter((s) => s.length === minimumCardinality).map((s) => [...s]);
+  const cand = [...candidateSubset].sort();
+  if (!cand.every((d) => exposedDimensions.includes(d))) throw new Error("unknown candidate dim");
+  const candSufficient = isSufficient([...cand]);
+  if (!candSufficient)
+    return {
+      status: "NOT_SUFFICIENT",
+      minimumCardinality,
+      minimumWitnesses: minimumWitnesses.map((s) => [...s]),
+      coMinimumWitnesses: minimumWitnesses.map((s) => [...s]),
+      checkedCount: totalSubsets + 1,
+      totalSubsets,
+      exhaustive: true,
+    };
+  if (cand.length > minimumCardinality)
+    return {
+      status: "NON_MINIMUM",
+      minimumCardinality,
+      minimumWitnesses: minimumWitnesses.map((s) => [...s]),
+      coMinimumWitnesses: minimumWitnesses.map((s) => [...s]),
+      checkedCount: totalSubsets + 1,
+      totalSubsets,
+      exhaustive: true,
+    };
+  return {
+    status: "VERIFIED",
+    minimumCardinality,
+    minimumWitnesses: minimumWitnesses.map((s) => [...s]),
+    coMinimumWitnesses: minimumWitnesses.map((s) => [...s]),
+    checkedCount: totalSubsets + 1,
+    totalSubsets,
+    exhaustive: true,
+  };
+}
+
+export function verifyCandidateWitness(candidateSubset) {
+  const full = [...EXPOSED_DIMENSIONS];
+  const target = conclusionForSubset(full);
+  return verifyWitness({
+    candidateSubset: [...candidateSubset],
+    exposedDimensions: full,
+    isSufficient: (s) => conclusionForSubset(s) === target,
+  });
+}

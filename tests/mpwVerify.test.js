@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { verifyCanonical } from "../src/mpwVerify.js";
+import { verifyCanonical, verifyCandidateWitness, verifyWitness } from "../src/mpwVerify.js";
 import { protocolForSubset, LAB_A_PROTOCOL, LAB_B_PROTOCOL } from "../src/mpwFixture.js";
 
 test("all 16 evaluated even though min is found early", () => {
@@ -34,4 +34,26 @@ test("verifier hardcodes no answer", async () => {
   const src = await readFile(new URL("../src/mpwVerify.js", import.meta.url), "utf8");
   assert.ok(!src.includes("reasoning_budget"));
   assert.ok(!src.includes("MODEL_A") && !src.includes("MODEL_B") && !src.includes("INCONCLUSIVE"));
+});
+
+test("candidate statuses work, never forcing an answer", () => {
+  assert.equal(verifyCandidateWitness(["reasoning_budget"]).status, "VERIFIED");
+  assert.equal(verifyCandidateWitness(["reasoning_budget", "answer_parser"]).status, "NON_MINIMUM");
+  assert.equal(verifyCandidateWitness([]).status, "NOT_SUFFICIENT");
+  const none = verifyWitness({
+    candidateSubset: ["a"],
+    exposedDimensions: ["a", "b"],
+    isSufficient: () => false,
+  });
+  assert.equal(none.status, "UNRESOLVED");
+  assert.equal(none.minimumCardinality, null);
+  assert.deepEqual(none.minimumWitnesses, []);
+  const multi = verifyWitness({
+    candidateSubset: ["a"],
+    exposedDimensions: ["a", "b", "c"],
+    isSufficient: (s) => s.includes("a") || s.includes("b"),
+  });
+  assert.equal(multi.status, "VERIFIED");
+  assert.equal(multi.minimumCardinality, 1);
+  assert.equal(multi.minimumWitnesses.length, 2);
 });
