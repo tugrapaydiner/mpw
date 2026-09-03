@@ -1,5 +1,11 @@
-// four top-level-page tools, same service as the ui. no answer in descriptions.
-import { dispute, runCounterfactual, inspectEvidence, witness } from "../engine/mpwService.js";
+// four top-level-page tools, same application services as the ui (caller AGENT).
+// no answer in descriptions.
+import {
+  readDispute,
+  runCounterfactualOp,
+  inspectEvidenceOp,
+  verifyWitnessOp,
+} from "../state/investigation.js";
 import { EXPOSED_DIMENSIONS } from "../engine/mpwFixture.js";
 import { STRATA } from "../engine/mpwFixture.js";
 import type { JsonSchema, ToolDef } from "../types";
@@ -46,7 +52,11 @@ export const TOOLS: ToolDef[] = [
       "Summarizes the Lab A vs Lab B evaluation dispute: models, benchmark makeup, exposed protocol dimensions, and each lab's declared headline. Good starting context before running experiments.",
     inputSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
     annotations: { ...READONLY },
-    execute: async () => ({ ok: true, dispute: dispute() }) as Record<string, unknown>,
+    execute: async () => {
+      const r = readDispute("AGENT");
+      if (!r.ok) return { ok: false, error: r.error } as Record<string, unknown>;
+      return { ok: true, dispute: r.dispute } as Record<string, unknown>;
+    },
   },
   {
     name: "run_counterfactual",
@@ -62,7 +72,9 @@ export const TOOLS: ToolDef[] = [
     execute: async (args = {}) => {
       try {
         rejectExtra(args, ["subset"]);
-        return { ok: true, result: runCounterfactual(asSubset(args["subset"])) };
+        const r = runCounterfactualOp("AGENT", asSubset(args["subset"]));
+        if (!r.ok) return { ok: false, error: r.error };
+        return { ok: true, result: r.result };
       } catch (e) {
         return { ok: false, error: String((e as Error).message || e) };
       }
@@ -88,7 +100,9 @@ export const TOOLS: ToolDef[] = [
         rejectExtra(args, ["subset", "stratum", "limit"]);
         const stratum = (args["stratum"] as string | undefined) ?? null;
         const limit = (args["limit"] as number | undefined) ?? 5;
-        return { ok: true, result: inspectEvidence(asSubset(args["subset"]), { stratum, limit }) };
+        const r = inspectEvidenceOp("AGENT", asSubset(args["subset"]), { stratum, limit });
+        if (!r.ok) return { ok: false, error: r.error };
+        return { ok: true, result: r.result };
       } catch (e) {
         return { ok: false, error: String((e as Error).message || e) };
       }
@@ -109,7 +123,13 @@ export const TOOLS: ToolDef[] = [
       try {
         rejectExtra(args, ["candidateSubset"]);
         if (!Array.isArray(args["candidateSubset"])) throw new Error("candidateSubset must be an array");
-        return { ok: true, result: witness([...(args["candidateSubset"] as string[])]) };
+        const r = verifyWitnessOp("AGENT", [...(args["candidateSubset"] as string[])]);
+        if (!r.ok) {
+          if (r.error.includes("SOURCE_INTEGRITY_FAILURE"))
+            return { ok: false, code: "SOURCE_INTEGRITY_FAILURE", error: r.error };
+          return { ok: false, error: r.error };
+        }
+        return { ok: true, result: r.result };
       } catch (e) {
         const msg = String((e as Error).message || e);
         if (msg.includes("SOURCE_INTEGRITY_FAILURE"))

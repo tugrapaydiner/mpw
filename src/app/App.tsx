@@ -1,5 +1,13 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { dispute, runCounterfactual, inspectEvidence, witness } from "../engine/mpwService";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import {
+  getInvestigationState,
+  subscribeInvestigation,
+  readDispute,
+  runCounterfactualOp,
+  inspectEvidenceOp,
+  verifyWitnessOp,
+  resetInvestigation,
+} from "../state/investigation";
 import { registerWebMcpTools } from "../webmcp/tools";
 import { registerSmokeTool } from "../webmcp/smoke";
 import { useSelection } from "../state/useSelection";
@@ -7,9 +15,8 @@ import { getSmokeState, subscribeSmoke, setSupported } from "../state/smokeStore
 import JsonBlock from "../components/JsonBlock";
 
 export default function App() {
-  const d = useMemo(() => dispute(), []);
+  const inv = useSyncExternalStore(subscribeInvestigation, getInvestigationState);
   const { checked, toggle } = useSelection();
-  const [out, setOut] = useState<{ counter?: unknown; evidence?: unknown; witness?: unknown }>({});
   const [note, setNote] = useState("checking for WebMCP…");
   const [busy, setBusy] = useState<string | null>(null);
   const smoke = useSyncExternalStore(subscribeSmoke, getSmokeState);
@@ -24,14 +31,10 @@ export default function App() {
     });
   }, []);
 
-  const run = (key: "counter" | "evidence" | "witness", fn: () => unknown) => {
+  const run = (key: string, fn: () => void) => {
     setBusy(key);
     setTimeout(() => {
-      try {
-        setOut((o) => ({ ...o, [key]: fn() }));
-      } catch (e) {
-        setOut((o) => ({ ...o, [key]: { error: String((e as Error).message || e) } }));
-      }
+      fn();
       setBusy(null);
     }, 30);
   };
@@ -45,6 +48,10 @@ export default function App() {
         recomputed — execute the deterministic synthetic counterfactual evaluation.
       </p>
       <p>{note}</p>
+      <p>
+        status: {inv.status}
+        {inv.error !== null ? ` · error: ${inv.error}` : ""}
+      </p>
       <h2>webmcp compatibility</h2>
       <p>
         {smoke.supported === null ? "checking…" : smoke.supported ? "Supported" : "unavailable"} · invocation
@@ -53,29 +60,37 @@ export default function App() {
       </p>
       {smoke.activity.length > 0 && <JsonBlock value={smoke.activity} />}
       <h2>dispute</h2>
-      <JsonBlock value={d} />
+      <button disabled={busy !== null} onClick={() => run("read", () => readDispute("HUMAN"))}>
+        {busy === "read" ? "reading…" : "read dispute"}
+      </button>
+      {inv.dispute !== null && <JsonBlock value={{ dispute: inv.dispute, integrity: inv.integrity, differences: inv.differences }} />}
       <h2>run a hybrid</h2>
       <div>
-        {d.exposedDimensions.map((dim) => (
+        {(inv.dispute?.exposedDimensions ?? []).map((dim) => (
           <label key={dim} style={{ marginRight: "1rem" }}>
             <input type="checkbox" checked={checked.includes(dim)} onChange={() => toggle(dim)} /> {dim}
           </label>
         ))}
       </div>
-      <button disabled={busy !== null} onClick={() => run("counter", () => runCounterfactual(checked))}>
+      <button disabled={busy !== null} onClick={() => run("counter", () => runCounterfactualOp("HUMAN", checked))}>
         {busy === "counter" ? "running…" : "run counterfactual"}
       </button>
-      <JsonBlock value={out.counter} />
+      {inv.selectedExperiment !== null && <JsonBlock value={inv.selectedExperiment} />}
       <h2>evidence</h2>
-      <button disabled={busy !== null} onClick={() => run("evidence", () => inspectEvidence(checked, { limit: 5 }))}>
+      <button disabled={busy !== null} onClick={() => run("evidence", () => inspectEvidenceOp("HUMAN", checked, { limit: 5 }))}>
         {busy === "evidence" ? "running…" : "inspect evidence"}
       </button>
-      <JsonBlock value={out.evidence} />
+      {inv.evidenceView !== null && <JsonBlock value={inv.evidenceView} />}
       <h2>verify a witness</h2>
-      <button disabled={busy !== null} onClick={() => run("witness", () => witness(checked))}>
+      <button disabled={busy !== null} onClick={() => run("witness", () => verifyWitnessOp("HUMAN", checked))}>
         {busy === "witness" ? "running…" : "verify current selection"}
       </button>
-      <JsonBlock value={out.witness} />
+      {inv.verification !== null && <JsonBlock value={{ verification: inv.verification, certificate: inv.certificate }} />}
+      <h2>investigation</h2>
+      <button disabled={busy !== null} onClick={() => run("reset", () => resetInvestigation("HUMAN"))}>
+        {busy === "reset" ? "resetting…" : "reset investigation"}
+      </button>
+      <JsonBlock value={{ experiments: inv.experiments.length, activity: inv.activity }} />
     </main>
   );
 }
