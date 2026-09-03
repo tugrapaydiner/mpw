@@ -9,5 +9,5 @@ tests: 67 passing, 15 files. seeds pinned (sim mpw-canonical-v1, boot mpw-boot-v
 domain: exact vocabulary in `src/types/domain.ts`, runtime encodings unchanged.
 smoke: proven live (10 invocations, chrome inspector path). compat PASS recorded.
 deploy: dist ready. pages workflow present.
-head: 659eea6a6ccef7f73f0345994068a603dfc7fe48
+head: 0692c97e524e071b6a2124ff9ca213f66691380e
 open: demo video, submit, freeze.
