@@ -1,4 +1,13 @@
-# BLOCKED — MANUAL WEBMCP TEST REQUIRED
+# UNBLOCKED — manual test passed (2026-09-02, chrome webmcp flag + inspector)
+
+- [x] site loads over public https
+- [x] all four tools listed/discovered
+- [x] real invocation through the browser webmcp path
+- [x] right args reached execute (`{"subset": ["reasoning_budget"]}` echoed back)
+- [x] page visibly changes (ui buttons render dispute/hybrid/evidence/verify live)
+- [x] result returned: MODEL_B, reproducesTarget true
+
+## attempt log (2026-09-02, tunnel deploy)
 
 mocks here don't prove competition compat. dev stops until a human checks a public https deploy in a supported setup (desktop app built-in browser, Sol or Terra, updated app, non-Enterprise/Edu).
 
