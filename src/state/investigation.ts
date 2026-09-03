@@ -61,6 +61,10 @@ const initialState = (): InvestigationState => ({
 let state: InvestigationState = initialState();
 const listeners = new Set<() => void>();
 
+// callers receive and store separate copies. a mutated return value can never
+// corrupt history, and history can never leak a mutable handle outward.
+const snap = <T>(v: T): T => structuredClone(v);
+
 export function getInvestigationState(): InvestigationState {
   return state;
 }
@@ -93,8 +97,8 @@ export function readDispute(caller: Caller): { ok: true; dispute: InvestigationS
     const integrity = checkSourceIntegrity();
     const differences = diffProtocols(LAB_A_PROTOCOL, LAB_B_PROTOCOL) as string[];
     const next = log(state, caller, "READ_DISPUTE", `dispute loaded (${d.models.join(",")})`);
-    emit({ ...next, dispute: d, integrity, differences, status: "dispute loaded", error: null });
-    return { ok: true as const, dispute: d, integrity, differences };
+    emit({ ...next, dispute: snap(d), integrity: snap(integrity), differences: [...differences], status: "dispute loaded", error: null });
+    return { ok: true as const, dispute: snap(d), integrity: snap(integrity), differences: [...differences] };
   } catch (e) {
     return fail(state, caller, "READ_DISPUTE", String((e as Error).message || e));
   }
@@ -106,8 +110,8 @@ export function runCounterfactualOp(caller: Caller, subset: unknown): { ok: true
     const prior = state.experiments.find((x) => JSON.stringify([...x.subset].sort()) === key);
     if (prior) {
       const next = log(state, caller, "RUN_COUNTERFACTUAL", `repeat ${key} -> ${prior.conclusion}`);
-      emit({ ...next, selectedSubset: [...prior.subset], selectedExperiment: prior, status: "experiment complete", error: null });
-      return { ok: true as const, result: prior, repeated: true };
+      emit({ ...next, selectedSubset: [...prior.subset], selectedExperiment: snap(prior), status: "experiment complete", error: null });
+      return { ok: true as const, result: snap(prior), repeated: true };
     }
     const result = runCounterfactual(subset);
     let next = log(state, caller, "RUN_COUNTERFACTUAL", `${key} -> ${result.conclusion}`);
@@ -117,14 +121,14 @@ export function runCounterfactualOp(caller: Caller, subset: unknown): { ok: true
     }
     emit({
       ...next,
-      experiments: [...next.experiments, result],
+      experiments: [...next.experiments, snap(result)],
       selectedSubset: [...result.subset],
-      selectedExperiment: result,
+      selectedExperiment: snap(result),
       certificate: cert,
       status: "experiment complete",
       error: null,
     });
-    return { ok: true as const, result, repeated: false };
+    return { ok: true as const, result: snap(result), repeated: false };
   } catch (e) {
     return fail(state, caller, "RUN_COUNTERFACTUAL", String((e as Error).message || e));
   }
@@ -138,8 +142,8 @@ export function inspectEvidenceOp(
   try {
     const result = inspectEvidence(subset, opts);
     const next = log(state, caller, "INSPECT_EVIDENCE", `${JSON.stringify(result.subset)} -> ${result.conclusion}`);
-    emit({ ...next, evidenceView: result, status: "evidence inspected", error: null });
-    return { ok: true as const, result };
+    emit({ ...next, evidenceView: snap(result), status: "evidence inspected", error: null });
+    return { ok: true as const, result: snap(result) };
   } catch (e) {
     return fail(state, caller, "INSPECT_EVIDENCE", String((e as Error).message || e));
   }
@@ -169,12 +173,12 @@ export function verifyWitnessOp(caller: Caller, candidate: unknown): { ok: true;
     emit({
       ...next,
       candidate: sorted,
-      verification: result,
+      verification: snap(result),
       certificate: cert,
       status: result.status === "VERIFIED" ? "witness verified" : "verification complete",
       error: null,
     });
-    return { ok: true as const, result };
+    return { ok: true as const, result: snap(result) };
   } catch (e) {
     return fail(state, caller, "VERIFY_WITNESS", String((e as Error).message || e));
   }
