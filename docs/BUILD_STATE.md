@@ -1,7 +1,7 @@
-# build state (updated 2026-09-03, P08)
+# build state (updated 2026-09-03, P09)
 
 WEBMCP_SMOKE_REAL=PASS
-NEXT=P09
+NEXT=P10
 stack: React 19 + TS 5.9 strict + Vite 8 + Vitest 4 + eslint.
 layout: src/{app,components,engine,state,types,webmcp}, data/{publications,fixtures}, scripts, tests/{engine,fixtures,webmcp}, docs/phase-reports.
 gates: `npm run verify` = typecheck + lint + tests + build. green required.
