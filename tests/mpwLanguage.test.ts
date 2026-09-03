@@ -2,7 +2,18 @@ import { describe, it, expect } from "vitest";
 import { readFile } from "node:fs/promises";
 import { TOOLS } from "../src/engine/mpwTools";
 
-const AVOID = ["cause found", "truth discovered", "lab a is wrong", "model b is smarter", "universal winner"];
+const AVOID = [
+  "cause found",
+  "truth discovered",
+  "lab a is wrong",
+  "model b is smarter",
+  "universal winner",
+  "first-ever",
+  "unprecedented",
+  "invented harness comparison",
+  "invented executable science",
+  "invented scientific verification",
+];
 
 describe("language", () => {
   it("tool descriptions stay inside the allowed lines", () => {
