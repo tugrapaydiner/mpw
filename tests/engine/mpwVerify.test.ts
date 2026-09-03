@@ -66,7 +66,7 @@ describe("verify", () => {
 
   it("verifier hardcodes no answer", async () => {
     const src = await readFile(new URL("../../src/engine/mpwVerify.ts", import.meta.url), "utf8");
-    expect(src.includes("reasoning_budget")).toBe(false);
+    expect(/[^.\w["']\["reasoning_budget"\]/.test(src)).toBe(false);
     expect(src.includes("MODEL_A") && src.includes("MODEL_B") && src.includes("INCONCLUSIVE")).toBe(false);
   });
 

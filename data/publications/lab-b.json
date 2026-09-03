@@ -1,14 +1,33 @@
 {
-  "kind": "PublicationManifestCore",
+  "kind": "SourcePublication",
   "version": 1,
   "source": "Lab B",
+  "benchmark": {
+    "id": "mpw-bench",
+    "version": 1,
+    "universe": "6281d85a1a5a3f1956a6ce3db54d01ab63084afd3a1d75a085c06609ee7787b9"
+  },
+  "models": ["MODEL_A", "MODEL_B"],
+  "simulator": { "seed": "mpw-canonical-v1", "version": "mpw-sim/1" },
+  "evaluator": {
+    "seed": "mpw-boot-v1",
+    "replicates": 10000,
+    "algorithm": "mpw-stratified-paired-bootstrap",
+    "version": 1
+  },
   "protocol": {
     "reasoning_budget": 2048,
     "answer_parser": "strict",
     "retry_policy": "no-retry",
     "tool_access": "restricted"
   },
-  "declared": "MODEL_B",
-  "seeds": { "sim": "mpw-canonical-v1", "boot": "mpw-boot-v1" },
-  "evidence": null
+  "stats": {
+    "scoreA": 0.315,
+    "scoreB": 0.525,
+    "delta": -0.21,
+    "ciLow": -0.2675,
+    "ciHigh": -0.1525,
+    "conclusion": "MODEL_B",
+    "coverage": 400
+  }
 }

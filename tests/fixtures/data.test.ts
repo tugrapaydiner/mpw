@@ -13,7 +13,8 @@ describe("data fixtures", () => {
     const labB = JSON.parse(await readFile(new URL("../../data/publications/lab-b.json", import.meta.url), "utf8"));
     expect(labA.protocol).toEqual(LAB_A_PROTOCOL);
     expect(labB.protocol).toEqual(LAB_B_PROTOCOL);
-    expect(labA.declared).toBe("MODEL_A");
-    expect(labB.declared).toBe("MODEL_B");
+    expect(labA.stats.conclusion).toBe("MODEL_A");
+    expect(labB.stats.conclusion).toBe("MODEL_B");
+    expect(labA.benchmark.universe).toBe(labB.benchmark.universe);
   });
 });

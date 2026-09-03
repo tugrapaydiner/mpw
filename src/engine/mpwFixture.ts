@@ -1,5 +1,6 @@
 // fixed synthetic fixture. all synthetic, not claims about real models.
 import type { BenchmarkItem, Conclusion, Protocol, Subset } from "../types";
+import { sha256Hex } from "./sha256.js";
 
 export const MODELS = ["MODEL_A", "MODEL_B"];
 
@@ -17,6 +18,9 @@ export const STRATA: Stratum[] = [
 
 export const NUM_ITEMS = 400;
 export const NUM_COMBINATIONS = 16;
+export const BENCHMARK_ID = "mpw-bench";
+export const BENCHMARK_VERSION = 1;
+export const EVAL_VERSION = "mpw-eval/1";
 
 export const EXPOSED_DIMENSIONS = [
   "reasoning_budget",
@@ -75,6 +79,11 @@ export function buildBenchmarkItems(): BenchmarkItem[] {
     }
   }
   return items;
+}
+
+export function benchmarkUniverseHash(): string {
+  const ids = buildBenchmarkItems().map((i) => i.id).sort();
+  return sha256Hex(ids.join(","));
 }
 
 function checkSubset(subset: Subset): void {

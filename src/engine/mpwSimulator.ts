@@ -117,15 +117,28 @@ export function simulateItem(model: ModelName, item: BenchmarkItem, protocol: Pr
   };
 }
 
-export function simulateForSubset(subset: Subset, { seed = SIM_SEED }: { seed?: string } = {}): Outcome[] {
-  const protocol = protocolForSubset(subset);
+export function simulateForProtocol(protocol: Protocol) {
   return buildBenchmarkItems().map((it) => {
-    const rA = simulateItem("MODEL_A", it, protocol, seed);
-    const rB = simulateItem("MODEL_B", it, protocol, seed);
+    const rA = simulateItem("MODEL_A", it, protocol, SIM_SEED);
+    const rB = simulateItem("MODEL_B", it, protocol, SIM_SEED);
     const a = (rA.finalCorrect ? 1 : 0) as 0 | 1;
     const b = (rB.finalCorrect ? 1 : 0) as 0 | 1;
     return { id: it.id, stratum: it.stratum, a, b, diff: a - b };
   });
+}
+
+export function simulateForSubset(subset: Subset, { seed = SIM_SEED }: { seed?: string } = {}): Outcome[] {
+  if (seed !== SIM_SEED) {
+    const protocol = protocolForSubset(subset);
+    return buildBenchmarkItems().map((it) => {
+      const rA = simulateItem("MODEL_A", it, protocol, seed);
+      const rB = simulateItem("MODEL_B", it, protocol, seed);
+      const a = (rA.finalCorrect ? 1 : 0) as 0 | 1;
+      const b = (rB.finalCorrect ? 1 : 0) as 0 | 1;
+      return { id: it.id, stratum: it.stratum, a, b, diff: a - b };
+    });
+  }
+  return simulateForProtocol(protocolForSubset(subset));
 }
 
 export function evaluateSubset(subset: Subset, opts?: { seed?: string }) {
