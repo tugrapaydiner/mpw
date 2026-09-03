@@ -1,22 +1,10 @@
-// unhashed manifest core + stable canonical form, hashes come later
+// unhashed manifest core. canonical bytes + hashes live in mpwProvenance (JCS).
+import { canonicalBytes, hashExperiment } from "./mpwProvenance.js";
+
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 
 export function canonicalize(value: JsonValue): string {
-  if (value === null) return "null";
-  const t = typeof value;
-  if (t === "string") return JSON.stringify(value);
-  if (t === "number") {
-    if (!Number.isFinite(value)) throw new Error("non-finite number");
-    return JSON.stringify(value);
-  }
-  if (t === "boolean") return value ? "true" : "false";
-  if (Array.isArray(value)) return `[${value.map((v) => canonicalize(v)).join(",")}]`;
-  if (t === "object") {
-    const obj = value as Record<string, JsonValue>;
-    const keys = Object.keys(obj).sort();
-    return `{${keys.map((k) => `${JSON.stringify(k)}:${canonicalize(obj[k])}`).join(",")}}`;
-  }
-  throw new Error("unserializable value");
+  return canonicalBytes(value);
 }
 
 export interface ManifestCore {
@@ -53,7 +41,6 @@ export function canonicalManifest(core: ManifestCore): string {
 
 // ordering: items by id, receipts by protocol/item/model, dims sorted,
 // table by cardinality then lexicographic. arrays otherwise keep order.
-import { sha256Hex } from "./sha256.js";
 
 export interface EngineMeta {
   sim: string;
@@ -73,9 +60,7 @@ export function experimentId(
   protocol: Record<string, JsonValue>,
   meta: EngineMeta
 ): string {
-  return sha256Hex(
-    canonicalize({ baseLab, sourceLab, subset: [...subset].sort(), protocol, engine: meta })
-  );
+  return hashExperiment({ baseLab, sourceLab, subset, protocol, engine: meta });
 }
 export const canonicalDims = (dims: string[]): string[] => [...dims].sort();
 export const protocolIdForSubset = (subset: string[]): string => [...subset].sort().join("+");

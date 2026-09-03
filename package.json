@@ -30,6 +30,7 @@
     "vitest": "^4.1.11"
   },
   "dependencies": {
+    "canonicalize": "^4.0.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   }

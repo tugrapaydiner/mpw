@@ -1,6 +1,7 @@
 // clock-free cert: body -> canonical -> sha256 -> id. ui meta stays outside.
 import { canonicalize, sortVerificationTable } from "./mpwManifest.js";
 import type { JsonValue } from "./mpwManifest.js";
+import { hashCertificateBody } from "./mpwProvenance.js";
 import { sha256Hex } from "./sha256.js";
 import { MODELS, STRATA, NUM_ITEMS, EXPOSED_DIMENSIONS, LAB_A_PROTOCOL, LAB_B_PROTOCOL } from "./mpwFixture.js";
 import { SIM_SEED } from "./mpwSimulator.js";
@@ -55,7 +56,7 @@ export function certHash(canonical: string): string {
 export function buildCertificate() {
   const body = buildCertificateBody();
   const canonical = canonicalize(body);
-  const certificateHash = certHash(canonical);
+  const certificateHash = hashCertificateBody(body);
   return { body, canonical, certificateHash, certificateId: `mpw-${certificateHash.slice(0, 16)}` };
 }
 
