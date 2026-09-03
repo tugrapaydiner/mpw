@@ -41,8 +41,8 @@ export default function App() {
     registerWebMcpTools().then((r) => {
       setNote(
         r.registered.length
-          ? `WebMCP: ${r.registered.length} tools registered`
-          : "WebMCP not detected — manual app fully functional"
+          ? `Agent path (WebMCP): ${r.registered.length} tools live — an agent assistant can drive this page`
+          : "Agent path (WebMCP) not detected — manual app fully functional"
       );
     });
     readDispute("HUMAN");
@@ -120,9 +120,10 @@ export default function App() {
           <strong>OPPOSITE ESTABLISHED CONCLUSIONS.</strong>
         </p>
         <p className="mpw-muted">
-          Synthetic evaluation reports, not real model measurements. Every number below is recomputed by the
-          deterministic engine when you act.
+          Synthetic evaluation reports, not real model measurements. Same 400 synthetic items in four groups
+          of 100. Every number below is recomputed by the deterministic engine when you act.
         </p>
+        <p className="mpw-muted">Built for AI-evaluation researchers reconciling contradictory benchmark reports.</p>
       </section>
       <p role="status">{note}</p>
       <p role="status" aria-live="polite">
@@ -148,6 +149,7 @@ export default function App() {
                 <p className="mpw-conclusion">
                   {s.conclusion === "MODEL_A" ? "■ " : "□ "}<strong>{s.conclusion}</strong> · coverage {s.coverage}
                 </p>
+                <p className="mpw-muted">CI is the 95% interval for the A−B difference; its sign decides the conclusion.</p>
               </section>
             ))}
           </div>
@@ -176,7 +178,7 @@ export default function App() {
         </div>
         <p>
           <button disabled={busy !== null} onClick={() => run("counter", () => runCounterfactualOp("HUMAN", { adopt: checked }))}>
-            {busy === "counter" ? "running…" : "run counterfactual"}
+            {busy === "counter" ? "running…" : "run controlled test"}
           </button>{" "}
           <button
             disabled={busy !== null || exp === null}
@@ -246,6 +248,9 @@ export default function App() {
             ))}
           </div>
           <p>{subsetsLine({ subsetsTotal: inv.verification.totalSubsets })}</p>
+          <p className="mpw-muted">
+            Minimum witness: the smallest set of protocol changes that reproduces the other lab's conclusion.
+          </p>
           <p>
             status <strong>{inv.verification.status}</strong> · minimum cardinality{" "}
             {String(inv.verification.minimumCardinality)} · witness(es){" "}
@@ -260,10 +265,8 @@ export default function App() {
 
       {inv.certificate !== null && (
         <section className="mpw-cert mpw-flash" aria-label="Certificate">
-          <h3>certificate</h3>
-          <p>
-            id <strong>{inv.certificate.certificateId}</strong>
-          </p>
+          <p className="mpw-overline">certificate</p>
+          <p className="mpw-cert-id">{inv.certificate.certificateId}</p>
           <p className="mpw-scores mpw-hash">content hash {inv.certificate.certificateHash}</p>
           <p>
             status {inv.certificate.status} · valid {String(inv.certificate.valid)}
@@ -296,6 +299,7 @@ export default function App() {
       </section>
       <section aria-label="Activity">
         <h2 className="mpw-sec">activity</h2>
+        <p className="mpw-muted">HUMAN = you · AGENT = browser assistant · SYSTEM = deterministic engine.</p>
         <ul className="mpw-trace">
           {inv.activity.map((e) => (
             <li key={e.seq}>

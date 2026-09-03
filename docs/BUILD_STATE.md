@@ -1,8 +1,8 @@
-# build state (updated 2026-09-03, P32)
+# build state (updated 2026-09-03, P33)
 
 WEBMCP_SMOKE_REAL=PASS
 PRODUCTION_WEBMCP_AUTOMATED=PASS
-NEXT=P33 (P27 live-browser gate + P29 trials still need the human)
+NEXT=P34 (P27 live-browser gate + P29 trials still need the human)
 stack: React 19 + TS 5.9 strict + Vite 8 + Vitest 4 + eslint.
 layout: src/{app,components,engine,state,types,webmcp}, data/{publications,fixtures}, scripts, tests/{engine,fixtures,webmcp}, docs/phase-reports.
 gates: `npm run verify` = typecheck + lint + tests + build. green required.
