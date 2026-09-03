@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { readFile } from "node:fs/promises";
-import { verifyCanonical, verifyCandidateWitness, verifyWitness, checkSourceIntegrity } from "../../src/engine/mpwVerify";
+import { verifyCanonical, verifyCandidateWitness, verifyWitness, checkSourceIntegrity, deriveCanonicalDeclarations } from "../../src/engine/mpwVerify";
 import { protocolForSubset, LAB_A_PROTOCOL, LAB_B_PROTOCOL } from "../../src/engine/mpwFixture";
 
 describe("verify", () => {
@@ -68,5 +68,17 @@ describe("verify", () => {
     const src = await readFile(new URL("../../src/engine/mpwVerify.ts", import.meta.url), "utf8");
     expect(src.includes("reasoning_budget")).toBe(false);
     expect(src.includes("MODEL_A") && src.includes("MODEL_B") && src.includes("INCONCLUSIVE")).toBe(false);
+  });
+
+  it("headlines are derived from statistics, not authored", () => {
+    const derived = deriveCanonicalDeclarations();
+    expect(derived).toEqual([
+      { source: "Lab A", subset: [], declared: "MODEL_A" },
+      {
+        source: "Lab B",
+        subset: ["reasoning_budget", "answer_parser", "retry_policy", "tool_access"],
+        declared: "MODEL_B",
+      },
+    ]);
   });
 });

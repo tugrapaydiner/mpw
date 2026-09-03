@@ -160,8 +160,7 @@ export function verifyWitness({
   };
 }
 
-export function verifyCandidateWitness(candidateSubset: Subset, declarations: SourcePublication[] = SOURCE_PUBLICATIONS) {
-  checkSourceIntegrity(declarations);
+export function verifyCandidateWitness(candidateSubset: Subset, declarations: SourcePublication[] = SOURCE_PUBLICATIONS) {  checkSourceIntegrity(declarations);
   const full = [...EXPOSED_DIMENSIONS];
   const target = conclusionForSubset(full);
   return verifyWitness({
@@ -169,4 +168,13 @@ export function verifyCandidateWitness(candidateSubset: Subset, declarations: So
     exposedDimensions: full,
     isSufficient: (s) => conclusionForSubset(s) === target,
   });
+}
+
+// headlines derived from statistics, never authored. integrity compares
+// publication files against these, not against another constant.
+export function deriveCanonicalDeclarations(): Array<{ source: string; subset: Subset; declared: string }> {
+  return [
+    { source: "Lab A", subset: [], declared: conclusionForSubset([]) },
+    { source: "Lab B", subset: [...EXPOSED_DIMENSIONS], declared: conclusionForSubset([...EXPOSED_DIMENSIONS]) },
+  ];
 }
