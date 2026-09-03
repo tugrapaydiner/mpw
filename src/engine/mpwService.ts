@@ -5,6 +5,7 @@ import { BOOT_SEED, BOOT_REPLICATES } from "./mpwCore.js";
 import { verifyCandidateWitness } from "./mpwVerify.js";
 import { buildBenchmarkItems } from "./mpwFixture.js";
 import { validateDimensions } from "./mpwValidate.js";
+import { runCounterfactual as runExperiment } from "./mpwCounterfactual.js";
 import type { Subset } from "../types";
 
 const DIMS = [...EXPOSED_DIMENSIONS];
@@ -30,8 +31,8 @@ export function dispute() {
 
 export function runCounterfactual(subset: unknown) {
   const s = checkSubset(subset);
-  const ev = evaluateSubset(s);
-  const target = evaluateSubset([...DIMS]).conclusion;
+  const ev = runExperiment({ baseLab: "A", sourceLab: "B", subset: s });
+  const target = runExperiment({ baseLab: "A", sourceLab: "B", subset: [...DIMS] as Subset }).conclusion;
   return {
     subset: s,
     accA: ev.stats.accA,
