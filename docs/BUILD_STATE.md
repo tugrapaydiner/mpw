@@ -1,4 +1,4 @@
-# build state (updated 2026-09-03, P40)
+# build state (updated 2026-09-03, P41)
 
 WEBMCP_SMOKE_REAL=PASS
 PRODUCTION_WEBMCP_AUTOMATED=PASS
