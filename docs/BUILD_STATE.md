@@ -5,5 +5,5 @@ layout: src/{app,components,engine,state,types,webmcp}, data/{publications,fixtu
 gates: `npm run verify` = typecheck + lint + tests + build. green required.
 tests: 59 passing, 13 files. seeds pinned (sim mpw-canonical-v1, boot mpw-boot-v1).
 deploy: push main → pages workflow builds dist.
-head: bumped on commit below.
+head: 47ff6ebb1c7d368b9b98f835459930c694fb931e
 open: P01 gate items resolved here; demo video + submit + freeze still human-side.
