@@ -4,6 +4,7 @@ import { hashSeedString, stratifiedPairedBootstrap, classifyBootstrap, BOOT_SEED
 import type { BenchmarkItem, Conclusion, Outcome, Protocol, Subset } from "../types";
 
 export const SIM_SEED = "mpw-canonical-v1";
+export const SIM_VERSION = "mpw-sim/1";
 
 type ModelName = "MODEL_A" | "MODEL_B";
 

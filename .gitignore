@@ -33,3 +33,6 @@ venv/
 tmp/
 temp/
 *.tmp
+
+# Full receipt dumps stay local (cores are committed)
+data/generated/receipts.json

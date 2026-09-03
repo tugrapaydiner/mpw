@@ -55,6 +55,7 @@ export function canonicalManifest(core: ManifestCore): string {
 // table by cardinality then lexicographic. arrays otherwise keep order.
 export const canonicalDims = (dims: string[]): string[] => [...dims].sort();
 export const protocolIdForSubset = (subset: string[]): string => [...subset].sort().join("+");
+export const protocolKey = (protocol: Record<string, JsonValue>): string => canonicalize(protocol);
 
 interface HasId {
   id?: unknown;
