@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { readFile } from "node:fs/promises";
-import { TOOLS } from "../src/engine/mpwTools";
+import { TOOLS } from "../../src/webmcp/tools";
 
 const AVOID = [
   "cause found",
@@ -24,7 +24,7 @@ describe("language", () => {
   });
 
   it("ui copy stays inside the allowed lines", async () => {
-    const src = (await readFile(new URL("../src/ui/App.tsx", import.meta.url), "utf8")).toLowerCase();
+    const src = (await readFile(new URL("../../src/app/App.tsx", import.meta.url), "utf8")).toLowerCase();
     for (const p of AVOID) expect(src.includes(p), p).toBe(false);
   });
 });

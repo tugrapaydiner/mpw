@@ -11,7 +11,7 @@ import {
   buildBenchmarkItems,
   protocolForSubset,
   listAllProtocolCombinations,
-} from "../src/engine/mpwFixture";
+} from "../../src/engine/mpwFixture";
 
 describe("fixture", () => {
   it("benchmark is 400 paired items, 100 per stratum", () => {
@@ -59,7 +59,7 @@ describe("fixture", () => {
   });
 
   it("uses no hidden randomness source", async () => {
-    const src = await readFile(new URL("../src/engine/mpwFixture.ts", import.meta.url), "utf8");
+    const src = await readFile(new URL("../../src/engine/mpwFixture.ts", import.meta.url), "utf8");
     expect(src.includes("Math.random")).toBe(false);
     expect(src.includes("Date.now")).toBe(false);
   });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { gradeTrace, type TraceCall } from "../src/engine/mpwAgentEval";
+import { gradeTrace, type TraceCall } from "../../src/engine/mpwAgentEval";
 
 const okCounter = (subset: string[], conclusion: string): TraceCall => ({
   tool: "run_counterfactual",

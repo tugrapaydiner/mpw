@@ -1,5 +1,7 @@
 # claims
 
-we claim: the narrow contribution in `docs/CONTRIBUTION.md`, nothing bigger.
-we don't claim: anything in `docs/LANGUAGE.md` avoid lists, truth/causality/dishonesty/superiority, or that mocks prove compat (see `docs/WEBMCP_MANUAL_TEST.md`).
-evidence per claim lives in tests + the manual log. prior-art search still todo.
+ALLOWED: minimum sufficient protocol witness; target conclusion reproduced; minimum cardinality verified; conditional on the exposed protocol space; established under this evaluation fixture.
+
+FORBIDDEN: cause found; truth discovered; lab A is wrong; model B is smarter; universal winner; first-ever; unprecedented; invented harness comparison; invented executable science; invented scientific verification.
+
+forbidden stays forbidden until separate hard evidence exists (see `docs/CONTRIBUTION.md`). language tests enforce this on tool + ui copy.

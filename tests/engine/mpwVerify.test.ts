@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFile } from "node:fs/promises";
-import { verifyCanonical, verifyCandidateWitness, verifyWitness, checkSourceIntegrity } from "../src/engine/mpwVerify";
-import { protocolForSubset, LAB_A_PROTOCOL, LAB_B_PROTOCOL } from "../src/engine/mpwFixture";
+import { verifyCanonical, verifyCandidateWitness, verifyWitness, checkSourceIntegrity } from "../../src/engine/mpwVerify";
+import { protocolForSubset, LAB_A_PROTOCOL, LAB_B_PROTOCOL } from "../../src/engine/mpwFixture";
 
 describe("verify", () => {
   it("all 16 evaluated even though min is found early", () => {
@@ -65,7 +65,7 @@ describe("verify", () => {
   });
 
   it("verifier hardcodes no answer", async () => {
-    const src = await readFile(new URL("../src/engine/mpwVerify.ts", import.meta.url), "utf8");
+    const src = await readFile(new URL("../../src/engine/mpwVerify.ts", import.meta.url), "utf8");
     expect(src.includes("reasoning_budget")).toBe(false);
     expect(src.includes("MODEL_A") && src.includes("MODEL_B") && src.includes("INCONCLUSIVE")).toBe(false);
   });

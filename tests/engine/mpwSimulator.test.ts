@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { readFile } from "node:fs/promises";
-import { evaluateSubset, simulateForSubset, conclusionForSubset } from "../src/engine/mpwSimulator";
-import { findMinimumWitnesses } from "../src/engine/mpwWitness";
-import { EXPOSED_DIMENSIONS } from "../src/engine/mpwFixture";
+import { evaluateSubset, simulateForSubset, conclusionForSubset } from "../../src/engine/mpwSimulator";
+import { findMinimumWitnesses } from "../../src/engine/mpwWitness";
+import { EXPOSED_DIMENSIONS } from "../../src/engine/mpwFixture";
 
 describe("simulator", () => {
   it("opposite winners for Lab A vs Lab B", () => {
@@ -36,7 +36,7 @@ describe("simulator", () => {
   });
 
   it("never hardcodes the answer", async () => {
-    const src = await readFile(new URL("../src/engine/mpwSimulator.ts", import.meta.url), "utf8");
+    const src = await readFile(new URL("../../src/engine/mpwSimulator.ts", import.meta.url), "utf8");
     expect(src.includes("minimumCardinality")).toBe(false);
     expect(src.includes("INCONCLUSIVE")).toBe(false);
     expect(src.includes("2048")).toBe(false);

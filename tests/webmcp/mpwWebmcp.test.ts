@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { TOOLS, registerWebMcpTools } from "../src/engine/mpwTools";
-import { dispute, runCounterfactual, inspectEvidence, witness } from "../src/engine/mpwService";
+import { TOOLS, registerWebMcpTools } from "../../src/webmcp/tools";
+import { dispute, runCounterfactual, inspectEvidence, witness } from "../../src/engine/mpwService";
 
 const byName = (n: string) => TOOLS.find((t) => t.name === n)!;
 

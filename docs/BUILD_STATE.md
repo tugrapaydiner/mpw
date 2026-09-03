@@ -1,8 +1,9 @@
-# build state (updated 2026-09-03)
+# build state (updated 2026-09-03, P01)
 
-stack: React 19 + TS 5.9 + Vite 8 + Vitest 4. engine `src/engine/`, ui `src/ui/`.
-gates: `npm run verify` = typecheck + lint + tests + build. green required, no exceptions.
-tests: 56 passing, 11 files. seeds pinned (sim mpw-canonical-v1, boot mpw-boot-v1).
-deploy: push main → pages workflow builds dist. live tunnel served dist for manual test.
-head: 390458337b513f15cccf016d870a6570a7121bbc
-open: pages action rerun after enabling, <3min demo video, devpost submit before 1pm PDT Sep 3, then freeze.
+stack: React 19 + TS 5.9 strict + Vite 8 + Vitest 4 + eslint.
+layout: src/{app,components,engine,state,types,webmcp}, data/{publications,fixtures}, scripts, tests/{engine,fixtures,webmcp}, docs/phase-reports.
+gates: `npm run verify` = typecheck + lint + tests + build. green required.
+tests: 59 passing, 13 files. seeds pinned (sim mpw-canonical-v1, boot mpw-boot-v1).
+deploy: push main → pages workflow builds dist.
+head: bumped on commit below.
+open: P01 gate items resolved here; demo video + submit + freeze still human-side.

@@ -9,8 +9,8 @@ import {
   summarizeOutcomes,
   pairedStats,
   classifyConclusion,
-} from "../src/engine/mpwCore";
-import { sha256Hex } from "../src/engine/sha256";
+} from "../../src/engine/mpwCore";
+import { sha256Hex } from "../../src/engine/sha256";
 
 describe("core", () => {
   it("normal helpers behave", () => {
@@ -78,7 +78,7 @@ describe("core", () => {
   });
 
   it("core uses no hidden randomness source", async () => {
-    const src = await readFile(new URL("../src/engine/mpwCore.ts", import.meta.url), "utf8");
+    const src = await readFile(new URL("../../src/engine/mpwCore.ts", import.meta.url), "utf8");
     expect(src.includes("Math.random")).toBe(false);
     expect(src.includes("Date.now")).toBe(false);
   });

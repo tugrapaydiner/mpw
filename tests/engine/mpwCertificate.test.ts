@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFile } from "node:fs/promises";
-import { buildCertificate, buildCertificateBody } from "../src/engine/mpwCertificate";
-import { canonicalize } from "../src/engine/mpwManifest";
+import { buildCertificate, buildCertificateBody } from "../../src/engine/mpwCertificate";
+import { canonicalize } from "../../src/engine/mpwManifest";
 
 describe("certificate", () => {
   it("same science twice gives same identity", () => {
@@ -15,7 +15,7 @@ describe("certificate", () => {
   });
 
   it("body has no clock, ui stays outside", async () => {
-    const src = await readFile(new URL("../src/engine/mpwCertificate.ts", import.meta.url), "utf8");
+    const src = await readFile(new URL("../../src/engine/mpwCertificate.ts", import.meta.url), "utf8");
     expect(src.includes("Date.now")).toBe(false);
     const blob = JSON.stringify(buildCertificateBody()).toLowerCase();
     for (const k of ["displayedat", "downloadedat", "createdat", "timestamp", "wallclock"]) {

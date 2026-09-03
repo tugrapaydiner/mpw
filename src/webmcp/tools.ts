@@ -1,8 +1,8 @@
 // four top-level-page tools, same service as the ui. no answer in descriptions.
-import { dispute, runCounterfactual, inspectEvidence, witness } from "./mpwService.js";
-import { EXPOSED_DIMENSIONS } from "./mpwFixture.js";
-import { STRATA } from "./mpwFixture.js";
-import type { JsonSchema, ToolDef } from "./types.js";
+import { dispute, runCounterfactual, inspectEvidence, witness } from "../engine/mpwService.js";
+import { EXPOSED_DIMENSIONS } from "../engine/mpwFixture.js";
+import { STRATA } from "../engine/mpwFixture.js";
+import type { JsonSchema, ToolDef } from "../types";
 
 const DIM_ENUM = [...EXPOSED_DIMENSIONS].sort();
 const STRATUM_ENUM = STRATA.map((s) => s.name);

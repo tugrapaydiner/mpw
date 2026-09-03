@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { dispute, runCounterfactual, inspectEvidence, witness } from "../engine/mpwService";
-import { registerWebMcpTools } from "../engine/mpwTools";
-
-const fmt = (v: unknown) => JSON.stringify(v, null, 2);
+import { registerWebMcpTools } from "../webmcp/tools";
+import { useSelection } from "../state/useSelection";
+import JsonBlock from "../components/JsonBlock";
 
 export default function App() {
   const d = useMemo(() => dispute(), []);
-  const [checked, setChecked] = useState<string[]>([]);
+  const { checked, toggle } = useSelection();
   const [out, setOut] = useState<{ counter?: unknown; evidence?: unknown; witness?: unknown }>({});
   const [note, setNote] = useState("checking for WebMCP…");
   const [busy, setBusy] = useState<string | null>(null);
@@ -16,9 +16,6 @@ export default function App() {
       setNote(r.registered.length ? `WebMCP: ${r.registered.length} tools registered` : "WebMCP not detected, ui still works")
     );
   }, []);
-
-  const toggle = (dim: string) =>
-    setChecked((c) => (c.includes(dim) ? c.filter((x) => x !== dim) : [...c, dim]));
 
   const run = (key: "counter" | "evidence" | "witness", fn: () => unknown) => {
     setBusy(key);
@@ -42,7 +39,7 @@ export default function App() {
       </p>
       <p>{note}</p>
       <h2>dispute</h2>
-      <pre>{fmt(d)}</pre>
+      <JsonBlock value={d} />
       <h2>run a hybrid</h2>
       <div>
         {d.exposedDimensions.map((dim) => (
@@ -54,17 +51,17 @@ export default function App() {
       <button disabled={busy !== null} onClick={() => run("counter", () => runCounterfactual(checked))}>
         {busy === "counter" ? "running…" : "run counterfactual"}
       </button>
-      <pre>{out.counter !== undefined ? fmt(out.counter) : ""}</pre>
+      <JsonBlock value={out.counter} />
       <h2>evidence</h2>
       <button disabled={busy !== null} onClick={() => run("evidence", () => inspectEvidence(checked, { limit: 5 }))}>
         {busy === "evidence" ? "running…" : "inspect evidence"}
       </button>
-      <pre>{out.evidence !== undefined ? fmt(out.evidence) : ""}</pre>
+      <JsonBlock value={out.evidence} />
       <h2>verify a witness</h2>
       <button disabled={busy !== null} onClick={() => run("witness", () => witness(checked))}>
         {busy === "witness" ? "running…" : "verify current selection"}
       </button>
-      <pre>{out.witness !== undefined ? fmt(out.witness) : ""}</pre>
+      <JsonBlock value={out.witness} />
     </main>
   );
 }

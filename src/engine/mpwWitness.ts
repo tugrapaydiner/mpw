@@ -1,5 +1,5 @@
 // deterministic global-minimum witness search. all co-minimums, never one pick.
-import type { Subset } from "./types.js";
+import type { Subset } from "../types";
 
 const MAX_DIMENSIONS = 20;
 

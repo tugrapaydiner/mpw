@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { readFile } from "node:fs/promises";
-import { findMinimumWitnesses, binomialCoefficient } from "../src/engine/mpwWitness";
+import { findMinimumWitnesses, binomialCoefficient } from "../../src/engine/mpwWitness";
 
 const has = (list: string[][], want: string[]) =>
   list.some((w) => w.length === want.length && want.every((d) => w.includes(d)));
@@ -67,7 +67,7 @@ describe("witness", () => {
   });
 
   it("uses no hidden randomness source", async () => {
-    const src = await readFile(new URL("../src/engine/mpwWitness.ts", import.meta.url), "utf8");
+    const src = await readFile(new URL("../../src/engine/mpwWitness.ts", import.meta.url), "utf8");
     expect(src.includes("Math.random")).toBe(false);
     expect(src.includes("Date.now")).toBe(false);
   });

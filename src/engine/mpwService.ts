@@ -4,7 +4,7 @@ import { SIM_SEED, evaluateSubset, simulateItem } from "./mpwSimulator.js";
 import { BOOT_SEED, BOOT_REPLICATES } from "./mpwCore.js";
 import { verifyCandidateWitness } from "./mpwVerify.js";
 import { buildBenchmarkItems } from "./mpwFixture.js";
-import type { Subset } from "./types.js";
+import type { Subset } from "../types";
 
 const DIMS = [...EXPOSED_DIMENSIONS];
 

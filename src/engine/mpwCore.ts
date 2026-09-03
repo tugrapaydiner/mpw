@@ -1,5 +1,5 @@
 // deterministic core. pure: no dom, no network, no clock. llm never calculates.
-import type { LegacyConclusion, Outcome } from "./types.js";
+import type { LegacyConclusion, Outcome } from "../types";
 
 const Z95 = 1.96;
 const ALPHA = 0.05;

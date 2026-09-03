@@ -1,7 +1,7 @@
 // mechanistic item simulator, hashed draws, no order dependence
 import { buildBenchmarkItems, protocolForSubset } from "./mpwFixture.js";
 import { hashSeedString, stratifiedPairedBootstrap, classifyBootstrap, BOOT_SEED } from "./mpwCore.js";
-import type { BenchmarkItem, Conclusion, Outcome, Protocol, Subset } from "./types.js";
+import type { BenchmarkItem, Conclusion, Outcome, Protocol, Subset } from "../types";
 
 export const SIM_SEED = "mpw-canonical-v1";
 

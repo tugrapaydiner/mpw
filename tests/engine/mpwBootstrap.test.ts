@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { stratifiedPairedBootstrap, classifyBootstrap, BOOT_SEED } from "../src/engine/mpwCore";
-import type { Outcome } from "../src/engine/types";
+import { stratifiedPairedBootstrap, classifyBootstrap, BOOT_SEED } from "../../src/engine/mpwCore";
+import type { Outcome } from "../../src/types";
 
 const mk = (rows: Array<[string, 0 | 1, 0 | 1]>): Outcome[] =>
   rows.map((r, i) => ({ id: `item-${i}`, stratum: r[0], a: r[1], b: r[2], diff: r[1] - r[2] }));

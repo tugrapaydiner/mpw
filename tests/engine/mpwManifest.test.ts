@@ -8,7 +8,7 @@ import {
   sortWitnessSubsets,
   sortVerificationTable,
   protocolIdForSubset,
-} from "../src/engine/mpwManifest";
+} from "../../src/engine/mpwManifest";
 
 describe("manifest", () => {
   it("canonical form ignores key order", () => {

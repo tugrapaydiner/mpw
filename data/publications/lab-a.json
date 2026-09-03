@@ -1,0 +1,14 @@
+{
+  "kind": "PublicationManifestCore",
+  "version": 1,
+  "source": "Lab A",
+  "protocol": {
+    "reasoning_budget": 8192,
+    "answer_parser": "tolerant",
+    "retry_policy": "one-retry",
+    "tool_access": "standard"
+  },
+  "declared": "MODEL_A",
+  "seeds": { "sim": "mpw-canonical-v1", "boot": "mpw-boot-v1" },
+  "evidence": null
+}

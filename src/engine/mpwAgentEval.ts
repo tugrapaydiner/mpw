@@ -1,7 +1,7 @@
 // grades a recorded tool-call trace. order-agnostic: any valid experiment
 // order passes. deterministic, no llm.
 import { verifyCanonical } from "./mpwVerify.js";
-import type { Subset } from "./types.js";
+import type { Subset } from "../types";
 
 export interface TraceCall {
   tool: string;

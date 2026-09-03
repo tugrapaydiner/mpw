@@ -1,5 +1,5 @@
 // fixed synthetic fixture. all synthetic, not claims about real models.
-import type { BenchmarkItem, Conclusion, Protocol, Subset } from "./types.js";
+import type { BenchmarkItem, Conclusion, Protocol, Subset } from "../types";
 
 export const MODELS = ["MODEL_A", "MODEL_B"];
 

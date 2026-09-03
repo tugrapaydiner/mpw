@@ -8,7 +8,7 @@ import {
 } from "./mpwFixture.js";
 import type { SourcePublication } from "./mpwFixture.js";
 import { evaluateSubset, conclusionForSubset } from "./mpwSimulator.js";
-import type { Protocol, Subset, WitnessStatus } from "./types.js";
+import type { Protocol, Subset, WitnessStatus } from "../types";
 
 export interface IntegrityError extends Error {
   code: string;

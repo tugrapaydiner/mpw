@@ -1,0 +1,12 @@
+{
+  "models": ["MODEL_A", "MODEL_B"],
+  "strata": [
+    { "name": "multi-step-reasoning", "count": 100 },
+    { "name": "quantitative-reasoning", "count": 100 },
+    { "name": "instruction-following", "count": 100 },
+    { "name": "tool-reasoning", "count": 100 }
+  ],
+  "numItems": 400,
+  "exposedDimensions": ["reasoning_budget", "answer_parser", "retry_policy", "tool_access"],
+  "seeds": { "sim": "mpw-canonical-v1", "boot": "mpw-boot-v1", "replicates": 10000 }
+}
