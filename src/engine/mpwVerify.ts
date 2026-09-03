@@ -256,7 +256,9 @@ export function verifyWitness({
       exhaustive: true,
     };
   const minimumCardinality: number = Math.min(...sufficient.map((s) => s.length));
-  const minimumWitnesses = sufficient.filter((s) => s.length === minimumCardinality).map((s) => [...s]);
+  const minimumWitnesses = sufficient
+    .filter((s) => s.length === minimumCardinality)
+    .map((s) => [...s].sort());
   const cand = [...candidateSubset].sort();
   if (!cand.every((d) => exposedDimensions.includes(d))) throw new Error("unknown candidate dim");
   const candSufficient = isSufficient([...cand]);
