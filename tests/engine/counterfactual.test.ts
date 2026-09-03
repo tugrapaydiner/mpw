@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { diffProtocols, constructHybrid, runCounterfactual, experimentId } from "../../src/engine/mpwCounterfactual";
+import { diffProtocols, constructHybrid, runCounterfactual, experimentId, experimentMeta } from "../../src/engine/mpwCounterfactual";
 import { LAB_A_PROTOCOL, LAB_B_PROTOCOL, EXPOSED_DIMENSIONS } from "../../src/engine/mpwFixture";
 import { evaluateSubset } from "../../src/engine/mpwSimulator";
 import type { ProtocolDimension } from "../../src/types/domain";
@@ -55,7 +55,7 @@ describe("counterfactual engine", () => {
   it("identity is content-stable, repeated runs identical", () => {    const a = runCounterfactual(REQ(["reasoning_budget"]));
     const b = runCounterfactual(REQ(["reasoning_budget"]));
     expect(a).toEqual(b);
-    expect(a.experimentId).toBe(experimentId("A", "B", ["reasoning_budget"], a.protocol));
+    expect(a.experimentId).toBe(experimentId("A", "B", ["reasoning_budget"], a.protocol, experimentMeta()));
     expect(a.experimentId).not.toContain("uuid");
     expect(a.categories.length).toBe(4);
   });

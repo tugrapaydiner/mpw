@@ -81,4 +81,27 @@ describe("verify", () => {
       },
     ]);
   });
+
+  it("INCONCLUSIVE can be the target", () => {
+    const r = verifyWitness({
+      candidateSubset: [],
+      exposedDimensions: ["a", "b"],
+      isSufficient: (s) => s.length === 0,
+    });
+    expect(r.status).toBe("VERIFIED");
+    expect(r.minimumCardinality).toBe(0);
+    expect(r.minimumWitnesses).toEqual([[]]);
+  });
+
+  it("canonical table enumerates the full powerset deterministically", () => {
+    const t1 = verifyCanonical().table;
+    const t2 = verifyCanonical().table;
+    expect(t1.length).toBe(16);
+    expect(new Set(t1.map((r) => r.subset.join("+"))).size).toBe(16);
+    expect(t1.some((r) => r.subset.length === 0)).toBe(true);
+    expect(t1.some((r) => r.subset.length === 4)).toBe(true);
+    expect(t1.map((r) => r.subset)).toEqual(t2.map((r) => r.subset));
+    expect(t1.every((r) => r.cardinality === r.subset.length)).toBe(true);
+    expect(new Set(t1.map((r) => r.experimentId)).size).toBe(16);
+  });
 });

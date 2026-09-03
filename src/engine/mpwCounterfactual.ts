@@ -7,10 +7,11 @@ import { SIM_SEED, SIM_VERSION, simulateForProtocol } from "./mpwSimulator.js";
 import { BOOT_SEED, BOOT_REPLICATES, BOOT_ALGO_ID, BOOT_ALGO_VERSION, analyzeEvidence } from "./mpwCore.js";
 import { checkSourceIntegrity } from "./mpwVerify.js";
 import type { SourcePublication } from "./mpwFixture.js";
-import { canonicalize } from "./mpwManifest.js";
-import { sha256Hex } from "./sha256.js";
+import { experimentId } from "./mpwManifest.js";
 import type { LabId, ProtocolDimension } from "../types/domain.js";
 import type { Protocol } from "../types/index.js";
+
+export { experimentId };
 
 const LABS: Record<LabId, Protocol> = { A: { ...LAB_A_PROTOCOL }, B: { ...LAB_B_PROTOCOL } };
 
@@ -63,16 +64,8 @@ function checkRequest(q: unknown): { baseLab: LabId; sourceLab: LabId; subset: P
   return { baseLab: r["baseLab"] as LabId, sourceLab: r["sourceLab"] as LabId, subset: [...seen].sort() as ProtocolDimension[] };
 }
 
-export function experimentId(baseLab: LabId, sourceLab: LabId, subset: ProtocolDimension[], protocol: Protocol): string {
-  return sha256Hex(
-    canonicalize({
-      baseLab,
-      sourceLab,
-      subset: [...subset].sort(),
-      protocol,
-      engine: { sim: SIM_SEED, simVersion: SIM_VERSION, boot: BOOT_SEED, replicates: BOOT_REPLICATES, algo: BOOT_ALGO_ID, algoVersion: BOOT_ALGO_VERSION },
-    })
-  );
+export function experimentMeta() {
+  return { sim: SIM_SEED, simVersion: SIM_VERSION, boot: BOOT_SEED, replicates: BOOT_REPLICATES, algo: BOOT_ALGO_ID, algoVersion: BOOT_ALGO_VERSION };
 }
 
 export function runCounterfactual(request: CounterfactualRequest, declarations?: SourcePublication[]) {
@@ -86,7 +79,7 @@ export function runCounterfactual(request: CounterfactualRequest, declarations?:
   const protocol = constructHybrid(base, source, q.subset);
   const outcomes = simulateForProtocol(protocol);
   const a = analyzeEvidence(outcomes);
-  const id = experimentId(q.baseLab, q.sourceLab, q.subset, protocol);
+  const id = experimentId(q.baseLab, q.sourceLab, q.subset, protocol, experimentMeta());
   return {
     experimentId: id,
     baseLab: q.baseLab,

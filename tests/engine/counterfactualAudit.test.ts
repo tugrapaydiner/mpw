@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { diffProtocols, constructHybrid, runCounterfactual, experimentId } from "../../src/engine/mpwCounterfactual";
+import { diffProtocols, constructHybrid, runCounterfactual, experimentId, experimentMeta } from "../../src/engine/mpwCounterfactual";
 import { LAB_A_PROTOCOL, LAB_B_PROTOCOL, EXPOSED_DIMENSIONS } from "../../src/engine/mpwFixture";
 import type { ProtocolDimension } from "../../src/types/domain";
 
@@ -54,7 +54,7 @@ describe("counterfactual audit", () => {
     expect(a.experimentId === b.experimentId).toBe(false);
     const c = runCounterfactual({ baseLab: "B", sourceLab: "A", subset: ["reasoning_budget"] });
     expect(c.experimentId === a.experimentId).toBe(false);
-    expect(a.experimentId).toBe(experimentId("A", "B", ["reasoning_budget"], a.protocol));
+    expect(a.experimentId).toBe(experimentId("A", "B", ["reasoning_budget"], a.protocol, experimentMeta()));
   });
 
   it("no stale cache: interleaved repeats identical", () => {

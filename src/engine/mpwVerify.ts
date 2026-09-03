@@ -13,6 +13,7 @@ import {
 } from "./mpwFixture.js";
 import { SIM_SEED, SIM_VERSION, simulateForProtocol } from "./mpwSimulator.js";
 import { BOOT_SEED, BOOT_REPLICATES, BOOT_ALGO_ID, BOOT_ALGO_VERSION, analyzeEvidence } from "./mpwCore.js";
+import { experimentId } from "./mpwManifest.js";
 import { evaluateSubset, conclusionForSubset } from "./mpwSimulator.js";
 import type { Protocol, Subset, WitnessStatus } from "../types";
 
@@ -176,6 +177,15 @@ export function verifyCanonical(declarations: SourcePublication[] = SOURCE_PUBLI
     const ev = evaluateSubset(subset);
     return {
       subset: [...subset],
+      cardinality: subset.length,
+      experimentId: experimentId("A", "B", subset, protocol, {
+        sim: SIM_SEED,
+        simVersion: SIM_VERSION,
+        boot: BOOT_SEED,
+        replicates: BOOT_REPLICATES,
+        algo: BOOT_ALGO_ID,
+        algoVersion: BOOT_ALGO_VERSION,
+      }),
       accA: ev.stats.accA,
       accB: ev.stats.accB,
       mean: ev.stats.mean,
