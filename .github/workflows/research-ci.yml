@@ -32,6 +32,8 @@ jobs:
         run: npm run verify
       - name: Reconciliation benchmark
         run: npm run research:benchmark
+      - name: Selection-aware 16-world analysis
+        run: npm run statistics:family:write
       - name: Write machine-readable research artifacts
         if: always()
         run: |
@@ -49,6 +51,7 @@ jobs:
         with:
           name: mpw-research-artifacts-${{ github.sha }}
           path: |
+            data/analysis/canonical-family-inference.json
             data/benchmarks/reconciliation-results.json
             data/certificates/canonical-v2.json
             mpw-source-${{ github.sha }}.zip
