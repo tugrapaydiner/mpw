@@ -32,13 +32,20 @@ jobs:
         run: npm run verify
       - name: Reconciliation benchmark
         run: npm run research:benchmark
-      - name: Write machine-readable benchmark result
+      - name: Write machine-readable research artifacts
         if: always()
-        run: npm run research:benchmark:write
-      - name: Upload benchmark result
+        run: |
+          npm run research:benchmark:write
+          npm run certificate:v2:write
+      - name: Replay portable certificate
+        if: always()
+        run: npm run verify:certificate -- data/certificates/canonical-v2.json
+      - name: Upload research artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: reconciliation-benchmark-${{ github.sha }}
-          path: data/benchmarks/reconciliation-results.json
+          name: mpw-research-artifacts-${{ github.sha }}
+          path: |
+            data/benchmarks/reconciliation-results.json
+            data/certificates/canonical-v2.json
           if-no-files-found: error

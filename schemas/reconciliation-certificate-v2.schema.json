@@ -1,0 +1,230 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tugrapaydiner.github.io/mpw/schemas/reconciliation-certificate-v2.schema.json",
+  "title": "MPW Protocol Reconciliation Certificate v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["body", "canonical", "certificateHash", "certificateId"],
+  "properties": {
+    "body": { "$ref": "#/$defs/body" },
+    "canonical": { "type": "string", "minLength": 2 },
+    "certificateHash": { "$ref": "#/$defs/sha256" },
+    "certificateId": { "type": "string", "pattern": "^mpw-v2-[0-9a-f]{16}$" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "scalar": { "type": ["string", "number", "boolean", "null"] },
+    "protocol": {
+      "type": "object",
+      "minProperties": 0,
+      "additionalProperties": { "$ref": "#/$defs/scalar" }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["conclusion"],
+      "properties": {
+        "conclusion": { "type": "string", "minLength": 1 },
+        "effect": { "type": "number" },
+        "evidenceId": { "type": "string", "minLength": 1 },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/scalar" }
+        }
+      }
+    },
+    "coordinate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "values"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/scalar" }
+        },
+        "description": { "type": "string" },
+        "cost": { "type": "number", "minimum": 0 }
+      }
+    },
+    "protocolSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "version", "coordinates"],
+      "properties": {
+        "kind": { "const": "FiniteProtocolSchema" },
+        "version": { "const": 1 },
+        "coordinates": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/coordinate" }
+        }
+      }
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["publicationId", "publicationHash", "protocol", "declaredObservation"],
+      "properties": {
+        "publicationId": { "type": "string", "minLength": 1 },
+        "publicationHash": { "$ref": "#/$defs/sha256" },
+        "protocol": { "$ref": "#/$defs/protocol" },
+        "declaredObservation": { "$ref": "#/$defs/observation" }
+      }
+    },
+    "auditRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subset", "protocol", "observation", "sufficient"],
+      "properties": {
+        "subset": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "protocol": { "$ref": "#/$defs/protocol" },
+        "observation": { "$ref": "#/$defs/observation" },
+        "sufficient": { "type": "boolean" }
+      }
+    },
+    "body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "schemaVersion",
+        "hashAlgorithm",
+        "canonicalization",
+        "objective",
+        "direction",
+        "evaluator",
+        "protocolSchema",
+        "publications",
+        "exposedDimensions",
+        "omittedDifferences",
+        "sourceReplay",
+        "decision",
+        "proof",
+        "audit",
+        "limitations"
+      ],
+      "properties": {
+        "kind": { "const": "ProtocolReconciliationCertificate" },
+        "schemaVersion": { "const": 2 },
+        "hashAlgorithm": { "const": "SHA-256" },
+        "canonicalization": { "const": "RFC8785/JCS" },
+        "objective": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "sufficiency"],
+          "properties": {
+            "kind": { "const": "minimum-cardinality" },
+            "sufficiency": { "const": "categorical-conclusion-equality" }
+          }
+        },
+        "direction": { "enum": ["A_TO_B", "B_TO_A"] },
+        "evaluator": { "type": "object" },
+        "protocolSchema": { "$ref": "#/$defs/protocolSchema" },
+        "publications": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["A", "B"],
+          "properties": {
+            "A": { "$ref": "#/$defs/publication" },
+            "B": { "$ref": "#/$defs/publication" }
+          }
+        },
+        "exposedDimensions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "omittedDifferences": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "sourceReplay": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["base", "target"],
+          "properties": {
+            "base": { "$ref": "#/$defs/observation" },
+            "target": { "$ref": "#/$defs/observation" }
+          }
+        },
+        "decision": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "targetConclusion",
+            "selectedCandidate",
+            "minimumCardinality",
+            "minimumWitnesses"
+          ],
+          "properties": {
+            "status": {
+              "enum": ["VERIFIED", "NOT_SUFFICIENT", "NON_MINIMUM", "NO_WITNESS", "UNSELECTED"]
+            },
+            "targetConclusion": { "type": "string", "minLength": 1 },
+            "selectedCandidate": {
+              "oneOf": [
+                { "type": "null" },
+                {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": { "type": "string", "minLength": 1 }
+                }
+              ]
+            },
+            "minimumCardinality": {
+              "type": ["integer", "null"],
+              "minimum": 0
+            },
+            "minimumWitnesses": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        },
+        "proof": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "searchMode",
+            "minimumProven",
+            "coMinimumComplete",
+            "landscapeExhaustive",
+            "evaluatedSubsets",
+            "totalSubsets",
+            "totalSubsetsExact"
+          ],
+          "properties": {
+            "searchMode": { "const": "landscape" },
+            "minimumProven": { "type": "boolean" },
+            "coMinimumComplete": { "type": "boolean" },
+            "landscapeExhaustive": { "type": "boolean" },
+            "evaluatedSubsets": { "type": "integer", "minimum": 1 },
+            "totalSubsets": { "type": ["integer", "null"], "minimum": 1 },
+            "totalSubsetsExact": { "type": "string", "pattern": "^[1-9][0-9]*$" }
+          }
+        },
+        "audit": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/auditRow" }
+        },
+        "limitations": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}
