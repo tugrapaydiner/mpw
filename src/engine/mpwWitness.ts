@@ -1,13 +1,9 @@
-// mpwWitness.js — deterministic global-minimum witness search.
-// I implement docs/MPW_DEFINITION.md exactly: globally minimum-cardinality,
-// not inclusion-minimal, returning ALL co-minimum witnesses.
-// Pure: no DOM, no WebMCP, no network, no randomness, no clock.
-// The sufficiency predicate must be deterministic code (it will call mpwCore),
-// never LLM judgment.
+// deterministic global-minimum witness search. all co-minimums, never one pick.
+import type { Subset } from "./types.js";
 
 const MAX_DIMENSIONS = 20;
 
-export function binomialCoefficient(n, k) {
+export function binomialCoefficient(n: number, k: number): number {
   if (!Number.isInteger(n) || n < 0) throw new Error("n must be a non-negative integer");
   if (!Number.isInteger(k) || k < 0 || k > n) return 0;
   let kk = k;
@@ -19,25 +15,23 @@ export function binomialCoefficient(n, k) {
   return Math.round(out);
 }
 
-function validateDimensions(exposedDimensions) {
+function validateDimensions(exposedDimensions: Subset): Subset {
   if (!Array.isArray(exposedDimensions)) throw new Error("exposedDimensions must be an array");
   if (exposedDimensions.length > MAX_DIMENSIONS)
     throw new Error(
       `too many exposed dimensions for exhaustive proof (n=${exposedDimensions.length}, max=${MAX_DIMENSIONS}); group them first`
     );
-  const seen = new Set();
+  const seen = new Set<string>();
   for (const d of exposedDimensions) {
     if (typeof d !== "string" || d.length === 0)
       throw new Error("every exposed dimension must be a non-empty string");
     if (seen.has(d)) throw new Error(`duplicate exposed dimension: ${d}`);
     seen.add(d);
   }
-  // I sort so enumeration order is deterministic regardless of input order.
   return [...exposedDimensions].sort();
 }
 
-// I yield index-combinations of size k in lexicographic order (deterministic).
-function* indexCombinations(n, k) {
+function* indexCombinations(n: number, k: number): Generator<number[]> {
   if (k === 0) {
     yield [];
     return;
@@ -53,35 +47,35 @@ function* indexCombinations(n, k) {
   }
 }
 
-// isSufficient(subset) must be a pure deterministic (subset: string[]) => boolean.
-// I pass a fresh array each call so the predicate can't mutate my enumeration state.
-export function findMinimumWitnesses({ exposedDimensions, isSufficient }) {
+export function findMinimumWitnesses({
+  exposedDimensions,
+  isSufficient,
+}: {
+  exposedDimensions: Subset;
+  isSufficient: (subset: Subset) => boolean;
+}) {
   const sortedDimensions = validateDimensions(exposedDimensions);
   if (typeof isSufficient !== "function") throw new Error("isSufficient must be a function");
   const n = sortedDimensions.length;
   const totalSubsets = 2 ** n;
   let checkedCount = 0;
-  const searchedCardinalities = [];
+  const searchedCardinalities: number[] = [];
 
   for (let k = 0; k <= n; k++) {
     searchedCardinalities.push(k);
-    const winnersAtK = [];
+    const winnersAtK: Subset[] = [];
     for (const combo of indexCombinations(n, k)) {
       const subset = combo.map((i) => sortedDimensions[i]);
       const verdict = isSufficient([...subset]);
-      if (typeof verdict !== "boolean")
-        throw new Error("isSufficient must return a boolean");
+      if (typeof verdict !== "boolean") throw new Error("isSufficient must return a boolean");
       checkedCount++;
       if (verdict) winnersAtK.push(subset);
     }
     if (winnersAtK.length > 0) {
-      // I finished all of size k and everything smaller failed, so k is the
-      // global minimum. Larger sizes can't beat it, so I stop — proof holds
-      // without checking them. I return every tie at k.
       const minimumWitnesses = winnersAtK.map((w) => [...w]);
       const coMinimumWitnesses = winnersAtK.map((w) => [...w]);
       return {
-        minimumCardinality: k,
+        minimumCardinality: k as number | null,
         minimumWitnesses,
         coMinimumWitnesses,
         status: "found",
@@ -95,9 +89,9 @@ export function findMinimumWitnesses({ exposedDimensions, isSufficient }) {
   }
 
   return {
-    minimumCardinality: null,
-    minimumWitnesses: [],
-    coMinimumWitnesses: [],
+    minimumCardinality: null as number | null,
+    minimumWitnesses: [] as Subset[],
+    coMinimumWitnesses: [] as Subset[],
     status: "none-sufficient",
     checkedCount,
     totalSubsets,

@@ -4,19 +4,20 @@ import { SIM_SEED, evaluateSubset, simulateItem } from "./mpwSimulator.js";
 import { BOOT_SEED, BOOT_REPLICATES } from "./mpwCore.js";
 import { verifyCandidateWitness } from "./mpwVerify.js";
 import { buildBenchmarkItems } from "./mpwFixture.js";
+import type { Subset } from "./types.js";
 
 const DIMS = [...EXPOSED_DIMENSIONS];
 
-function checkSubset(subset) {
+function checkSubset(subset: unknown): Subset {
   if (!Array.isArray(subset)) throw new Error("subset must be an array");
   if (subset.length > DIMS.length) throw new Error("too many dims");
-  const seen = new Set();
+  const seen = new Set<string>();
   for (const d of subset) {
     if (typeof d !== "string" || !DIMS.includes(d)) throw new Error(`unknown dim: ${d}`);
     if (seen.has(d)) throw new Error(`dup dim: ${d}`);
     seen.add(d);
   }
-  return [...subset].sort();
+  return [...subset].sort() as Subset;
 }
 
 export function dispute() {
@@ -32,7 +33,7 @@ export function dispute() {
   };
 }
 
-export function runCounterfactual(subset) {
+export function runCounterfactual(subset: unknown) {
   const s = checkSubset(subset);
   const ev = evaluateSubset(s);
   const target = evaluateSubset([...DIMS]).conclusion;
@@ -48,15 +49,16 @@ export function runCounterfactual(subset) {
   };
 }
 
-export function inspectEvidence(subset, { stratum = null, limit = 5 } = {}) {
+export function inspectEvidence(subset: unknown, { stratum = null, limit = 5 }: { stratum?: string | null; limit?: number } = {}) {
   const s = checkSubset(subset);
   if (stratum !== null && !STRATA.some((x) => x.name === stratum)) throw new Error(`unknown stratum: ${stratum}`);
   if (!Number.isInteger(limit) || limit < 1 || limit > 20) throw new Error("limit 1..20");
   const ev = evaluateSubset(s);
-  const byStratum = new Map();
+  const byStratum = new Map<string, { stratum: string; n: number; accA: number; accB: number }>();
   for (const o of ev.outcomes) {
-    if (!byStratum.has(o.stratum)) byStratum.set(o.stratum, { stratum: o.stratum, n: 0, accA: 0, accB: 0 });
-    const g = byStratum.get(o.stratum);
+    const key = o.stratum ?? "";
+    if (!byStratum.has(key)) byStratum.set(key, { stratum: key, n: 0, accA: 0, accB: 0 });
+    const g = byStratum.get(key)!;
     g.n++;
     g.accA += o.a;
     g.accB += o.b;
@@ -72,7 +74,7 @@ export function inspectEvidence(subset, { stratum = null, limit = 5 } = {}) {
   return { subset: s, conclusion: ev.conclusion, strata, sample };
 }
 
-export function witness(candidateSubset) {
+export function witness(candidateSubset: unknown) {
   if (!Array.isArray(candidateSubset)) throw new Error("candidateSubset must be an array");
-  return verifyCandidateWitness([...candidateSubset]);
+  return verifyCandidateWitness([...candidateSubset] as Subset);
 }

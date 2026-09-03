@@ -1,27 +1,54 @@
 // mechanistic item simulator, hashed draws, no order dependence
 import { buildBenchmarkItems, protocolForSubset } from "./mpwFixture.js";
 import { hashSeedString, stratifiedPairedBootstrap, classifyBootstrap, BOOT_SEED } from "./mpwCore.js";
+import type { BenchmarkItem, Conclusion, Outcome, Protocol, Subset } from "./types.js";
 
 export const SIM_SEED = "mpw-canonical-v1";
 
-export const MODEL_PROFILE = {
+type ModelName = "MODEL_A" | "MODEL_B";
+
+interface ModelProfile {
+  base: number;
+  efficiency: number;
+  reliability: number;
+  retry: number;
+  tool: number;
+}
+
+export const MODEL_PROFILE: Record<ModelName, ModelProfile> = {
   MODEL_A: { base: 0.92, efficiency: 0.35, reliability: 0.92, retry: 0.55, tool: 0.55 },
   MODEL_B: { base: 0.79, efficiency: 0.88, reliability: 0.94, retry: 0.5, tool: 0.62 },
 };
 
-export const STRATUM_TEMPLATE = {
+interface StratumTemplate {
+  diff: number;
+  demand: number;
+  frag: number;
+  need: number;
+  rec: number;
+}
+
+export const STRATUM_TEMPLATE: Record<string, StratumTemplate> = {
   "multi-step-reasoning": { diff: 0.35, demand: 0.9, frag: 0.3, need: 0.1, rec: 0.6 },
   "quantitative-reasoning": { diff: 0.35, demand: 0.85, frag: 0.35, need: 0.15, rec: 0.6 },
   "instruction-following": { diff: 0.25, demand: 0.3, frag: 0.8, need: 0.05, rec: 0.4 },
   "tool-reasoning": { diff: 0.3, demand: 0.5, frag: 0.4, need: 0.9, rec: 0.5 },
 };
 
-const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
-const u01 = (...parts) => hashSeedString(parts.join("|")) / 4294967296;
+const clamp01 = (x: number): number => (x < 0 ? 0 : x > 1 ? 1 : x);
+const u01 = (...parts: Array<string | number>): number => hashSeedString(parts.join("|")) / 4294967296;
 
-export function itemAttrs(item, seed = SIM_SEED) {
+export interface ItemAttrs {
+  difficulty: number;
+  demand: number;
+  fragility: number;
+  recoverability: number;
+  toolNeeded: boolean;
+}
+
+export function itemAttrs(item: BenchmarkItem, seed: string = SIM_SEED): ItemAttrs {
   const t = STRATUM_TEMPLATE[item.stratum];
-  const j = (k, w) => (u01(seed, "attr", item.id, k) - 0.5) * w;
+  const j = (k: string, w: number): number => (u01(seed, "attr", item.id, k) - 0.5) * w;
   return {
     difficulty: clamp01(t.diff + j("diff", 0.2)),
     demand: clamp01(t.demand + j("demand", 0.2)),
@@ -31,7 +58,22 @@ export function itemAttrs(item, seed = SIM_SEED) {
   };
 }
 
-export function simulateItem(model, item, protocol, seed = SIM_SEED) {
+export interface ItemReceipt {
+  id: string;
+  model: string;
+  stratum: string;
+  pSem: number;
+  pCan: number;
+  semanticCorrect: boolean;
+  canonical: boolean;
+  parserAccepts: boolean;
+  firstCorrect: boolean;
+  retried: boolean;
+  recovered: boolean;
+  finalCorrect: boolean;
+}
+
+export function simulateItem(model: ModelName, item: BenchmarkItem, protocol: Protocol, seed: string = SIM_SEED): ItemReceipt {
   const p = MODEL_PROFILE[model];
   const at = itemAttrs(item, seed);
   const budgetFactor = clamp01(protocol.reasoning_budget / 8192);
@@ -49,13 +91,11 @@ export function simulateItem(model, item, protocol, seed = SIM_SEED) {
   let retried = false;
   let recovered = false;
   let final = first;
-  let canonical2 = null;
-  let accepts2 = null;
   if (!first && protocol.retry_policy === "one-retry") {
     retried = true;
     if (u01(seed, item.id, model, "retry") < p.retry * at.recoverability) {
-      canonical2 = u01(seed, item.id, model, "fmt2") < pCan;
-      accepts2 = canonical2 || protocol.answer_parser === "tolerant";
+      const canonical2 = u01(seed, item.id, model, "fmt2") < pCan;
+      const accepts2 = canonical2 || protocol.answer_parser === "tolerant";
       recovered = accepts2;
       final = accepts2;
     }
@@ -76,18 +116,18 @@ export function simulateItem(model, item, protocol, seed = SIM_SEED) {
   };
 }
 
-export function simulateForSubset(subset, { seed = SIM_SEED } = {}) {
+export function simulateForSubset(subset: Subset, { seed = SIM_SEED }: { seed?: string } = {}): Outcome[] {
   const protocol = protocolForSubset(subset);
   return buildBenchmarkItems().map((it) => {
     const rA = simulateItem("MODEL_A", it, protocol, seed);
     const rB = simulateItem("MODEL_B", it, protocol, seed);
-    const a = rA.finalCorrect ? 1 : 0;
-    const b = rB.finalCorrect ? 1 : 0;
+    const a = (rA.finalCorrect ? 1 : 0) as 0 | 1;
+    const b = (rB.finalCorrect ? 1 : 0) as 0 | 1;
     return { id: it.id, stratum: it.stratum, a, b, diff: a - b };
   });
 }
 
-export function evaluateSubset(subset, opts) {
+export function evaluateSubset(subset: Subset, opts?: { seed?: string }) {
   const outcomes = simulateForSubset(subset, opts);
   const n = outcomes.length;
   let sA = 0;
@@ -109,9 +149,9 @@ export function evaluateSubset(subset, opts) {
     seed: boot.seed,
     method: boot.method,
   };
-  return { subset: [...subset], protocol: protocolForSubset(subset), outcomes, stats, conclusion };
+  return { subset: [...subset], protocol: protocolForSubset(subset), outcomes, stats, conclusion: conclusion as Conclusion };
 }
 
-export function conclusionForSubset(subset, opts) {
+export function conclusionForSubset(subset: Subset, opts?: { seed?: string }): Conclusion {
   return evaluateSubset(subset, opts).conclusion;
 }

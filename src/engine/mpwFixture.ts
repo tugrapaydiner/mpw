@@ -1,14 +1,14 @@
-// mpwFixture.js — fixed synthetic fixture for the Lab A vs Lab B dispute.
-// All settings here are synthetic protocol settings, not claims about real
-// commercial models. Pure data + deterministic builders: no DOM, no WebMCP,
-// no network, no randomness, no clock.
+// fixed synthetic fixture. all synthetic, not claims about real models.
+import type { BenchmarkItem, Conclusion, Protocol, Subset } from "./types.js";
 
-// Two synthetic models tested on one synthetic benchmark. Trust neither report;
-// my deterministic code below reconstructs everything from this fixture.
 export const MODELS = ["MODEL_A", "MODEL_B"];
 
-// 400 paired benchmark items, 100 per stratum, fixed order.
-export const STRATA = [
+export interface Stratum {
+  name: string;
+  count: number;
+}
+
+export const STRATA: Stratum[] = [
   { name: "multi-step-reasoning", count: 100 },
   { name: "quantitative-reasoning", count: 100 },
   { name: "instruction-following", count: 100 },
@@ -18,8 +18,6 @@ export const STRATA = [
 export const NUM_ITEMS = 400;
 export const NUM_COMBINATIONS = 16;
 
-// Four binary exposed protocol dimensions. A subset S means "adopt Lab B's
-// value for exactly these dimensions on top of Lab A".
 export const EXPOSED_DIMENSIONS = [
   "reasoning_budget",
   "answer_parser",
@@ -27,29 +25,33 @@ export const EXPOSED_DIMENSIONS = [
   "tool_access",
 ];
 
-// Canonical Lab A protocol (synthetic).
-export const LAB_A_PROTOCOL = {
-  reasoning_budget: 8192, // high
+export const LAB_A_PROTOCOL: Protocol = {
+  reasoning_budget: 8192,
   answer_parser: "tolerant",
   retry_policy: "one-retry",
   tool_access: "standard",
 };
 
-// Canonical Lab B protocol (synthetic).
-export const LAB_B_PROTOCOL = {
-  reasoning_budget: 2048, // low
+export const LAB_B_PROTOCOL: Protocol = {
+  reasoning_budget: 2048,
   answer_parser: "strict",
   retry_policy: "no-retry",
   tool_access: "restricted",
 };
 
-export const REASONING_BUDGET_LABELS = {
+export const REASONING_BUDGET_LABELS: Record<number, string> = {
   8192: "high",
   2048: "low",
 };
 
+export interface SourcePublication {
+  source: string;
+  subset: Subset;
+  declared: Conclusion;
+}
+
 // declared headlines per source pub, checked before any reconciliation
-export const SOURCE_PUBLICATIONS = [
+export const SOURCE_PUBLICATIONS: SourcePublication[] = [
   { source: "Lab A", subset: [], declared: "MODEL_A" },
   {
     source: "Lab B",
@@ -58,8 +60,8 @@ export const SOURCE_PUBLICATIONS = [
   },
 ];
 
-export function buildBenchmarkItems() {
-  const items = [];
+export function buildBenchmarkItems(): BenchmarkItem[] {
+  const items: BenchmarkItem[] = [];
   let globalIndex = 0;
   for (const stratum of STRATA) {
     for (let i = 0; i < stratum.count; i++) {
@@ -75,9 +77,9 @@ export function buildBenchmarkItems() {
   return items;
 }
 
-function checkSubset(subset) {
+function checkSubset(subset: Subset): void {
   if (!Array.isArray(subset)) throw new Error("subset must be an array");
-  const seen = new Set();
+  const seen = new Set<string>();
   for (const d of subset) {
     if (!EXPOSED_DIMENSIONS.includes(d)) throw new Error(`unknown protocol dimension: ${d}`);
     if (seen.has(d)) throw new Error(`duplicate protocol dimension: ${d}`);
@@ -85,26 +87,19 @@ function checkSubset(subset) {
   }
 }
 
-// I start from Lab A and adopt Lab B's value for exactly the dims in subset.
-// [] gives Lab A, all four gives Lab B, anything else gives a hybrid.
-export function protocolForSubset(subset) {
+export function protocolForSubset(subset: Subset): Protocol {
   checkSubset(subset);
   const protocol = { ...LAB_A_PROTOCOL };
-  for (const d of subset) protocol[d] = LAB_B_PROTOCOL[d];
+  for (const d of subset) protocol[d as keyof Protocol] = LAB_B_PROTOCOL[d as keyof Protocol];
   return protocol;
 }
 
-// All 2^4 = 16 exposed protocol combinations, ordered by cardinality then
-// lexicographic (deterministic). Each entry: { subset, protocol }.
-export function listAllProtocolCombinations() {
+export function listAllProtocolCombinations(): Array<{ subset: Subset; protocol: Protocol }> {
   const sorted = [...EXPOSED_DIMENSIONS].sort();
-  const out = [];
+  const out: Array<{ subset: Subset; protocol: Protocol }> = [];
   const n = sorted.length;
-  const rec = (start, chosen) => {
-    out.push({
-      subset: [...chosen],
-      protocol: protocolForSubset(chosen),
-    });
+  const rec = (start: number, chosen: Subset): void => {
+    out.push({ subset: [...chosen], protocol: protocolForSubset(chosen) });
     for (let i = start; i < n; i++) {
       chosen.push(sorted[i]);
       rec(i + 1, chosen);

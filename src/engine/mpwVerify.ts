@@ -6,17 +6,31 @@ import {
   SOURCE_PUBLICATIONS,
   listAllProtocolCombinations,
 } from "./mpwFixture.js";
+import type { SourcePublication } from "./mpwFixture.js";
 import { evaluateSubset, conclusionForSubset } from "./mpwSimulator.js";
+import type { Protocol, Subset, WitnessStatus } from "./types.js";
+
+export interface IntegrityError extends Error {
+  code: string;
+  checks: IntegrityCheck[];
+}
+
+export interface IntegrityCheck {
+  source: string;
+  declared: string;
+  recomputed: string;
+  match: boolean;
+}
 
 // each source must reproduce its own headline first, else integrity failure
-export function checkSourceIntegrity(declarations = SOURCE_PUBLICATIONS) {
-  const checks = declarations.map((d) => {
+export function checkSourceIntegrity(declarations: SourcePublication[] = SOURCE_PUBLICATIONS) {
+  const checks: IntegrityCheck[] = declarations.map((d) => {
     const recomputed = conclusionForSubset([...d.subset]);
     return { source: d.source, declared: d.declared, recomputed, match: recomputed === d.declared };
   });
   const bad = checks.filter((c) => !c.match);
   if (bad.length) {
-    const err = new Error(`SOURCE_INTEGRITY_FAILURE: ${bad.map((b) => b.source).join(", ")}`);
+    const err = new Error(`SOURCE_INTEGRITY_FAILURE: ${bad.map((b) => b.source).join(", ")}`) as IntegrityError;
     err.code = "SOURCE_INTEGRITY_FAILURE";
     err.checks = checks;
     throw err;
@@ -24,14 +38,14 @@ export function checkSourceIntegrity(declarations = SOURCE_PUBLICATIONS) {
   return { status: "OK", checks };
 }
 
-function checkHybrid(subset, protocol) {
+function checkHybrid(subset: Subset, protocol: Protocol): void {
   for (const d of EXPOSED_DIMENSIONS) {
-    const want = subset.includes(d) ? LAB_B_PROTOCOL[d] : LAB_A_PROTOCOL[d];
-    if (protocol[d] !== want) throw new Error(`hybrid mismatch on ${d}`);
+    const want = subset.includes(d) ? LAB_B_PROTOCOL[d as keyof Protocol] : LAB_A_PROTOCOL[d as keyof Protocol];
+    if (protocol[d as keyof Protocol] !== want) throw new Error(`hybrid mismatch on ${d}`);
   }
 }
 
-export function verifyCanonical(declarations = SOURCE_PUBLICATIONS) {
+export function verifyCanonical(declarations: SourcePublication[] = SOURCE_PUBLICATIONS) {
   checkSourceIntegrity(declarations);
   const full = [...EXPOSED_DIMENSIONS];
   const target = conclusionForSubset(full);
@@ -52,7 +66,8 @@ export function verifyCanonical(declarations = SOURCE_PUBLICATIONS) {
   });
   const sufficient = table.filter((r) => r.sufficient).map((r) => [...r.subset]);
   const minimumCardinality = sufficient.length ? Math.min(...sufficient.map((s) => s.length)) : null;
-  const minimumWitnesses = sufficient.filter((s) => s.length === minimumCardinality).map((s) => [...s]);
+  const minimumWitnesses =
+    minimumCardinality === null ? [] : sufficient.filter((s) => s.length === minimumCardinality).map((s) => [...s]);
   return {
     base,
     target,
@@ -68,16 +83,32 @@ export function verifyCanonical(declarations = SOURCE_PUBLICATIONS) {
 }
 
 // generic candidate check over any exposed set, never forces an answer
-export function verifyWitness({ candidateSubset, exposedDimensions, isSufficient }) {
+export function verifyWitness({
+  candidateSubset,
+  exposedDimensions,
+  isSufficient,
+}: {
+  candidateSubset: Subset;
+  exposedDimensions: Subset;
+  isSufficient: (subset: Subset) => boolean;
+}): {
+  status: WitnessStatus;
+  minimumCardinality: number | null;
+  minimumWitnesses: Subset[];
+  coMinimumWitnesses: Subset[];
+  checkedCount: number;
+  totalSubsets: number;
+  exhaustive: boolean;
+} {
   if (!Array.isArray(candidateSubset) || !Array.isArray(exposedDimensions))
     throw new Error("candidateSubset and exposedDimensions must be arrays");
   if (typeof isSufficient !== "function") throw new Error("isSufficient must be a function");
   const n = exposedDimensions.length;
   if (n > 20) throw new Error("too many dims for exhaustive check");
   const totalSubsets = 2 ** n;
-  const sufficient = [];
+  const sufficient: Subset[] = [];
   for (let mask = 0; mask < totalSubsets; mask++) {
-    const s = [];
+    const s: Subset = [];
     for (let i = 0; i < n; i++) if (mask & (1 << i)) s.push(exposedDimensions[i]);
     const v = isSufficient([...s]);
     if (typeof v !== "boolean") throw new Error("isSufficient must return a boolean");
@@ -93,7 +124,7 @@ export function verifyWitness({ candidateSubset, exposedDimensions, isSufficient
       totalSubsets,
       exhaustive: true,
     };
-  const minimumCardinality = Math.min(...sufficient.map((s) => s.length));
+  const minimumCardinality: number = Math.min(...sufficient.map((s) => s.length));
   const minimumWitnesses = sufficient.filter((s) => s.length === minimumCardinality).map((s) => [...s]);
   const cand = [...candidateSubset].sort();
   if (!cand.every((d) => exposedDimensions.includes(d))) throw new Error("unknown candidate dim");
@@ -129,7 +160,7 @@ export function verifyWitness({ candidateSubset, exposedDimensions, isSufficient
   };
 }
 
-export function verifyCandidateWitness(candidateSubset, declarations = SOURCE_PUBLICATIONS) {
+export function verifyCandidateWitness(candidateSubset: Subset, declarations: SourcePublication[] = SOURCE_PUBLICATIONS) {
   checkSourceIntegrity(declarations);
   const full = [...EXPOSED_DIMENSIONS];
   const target = conclusionForSubset(full);
