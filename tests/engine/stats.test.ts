@@ -106,8 +106,41 @@ describe("statistics", () => {
     expect(classifyBootstrap({ ciLow: 0.0004, ciHigh: 0.5 }).conclusion).toBe("MODEL_A");
   });
 
-  it("returns the full contracted struct", () => {
-    const r = analyzeEvidence(mk([["s1", 1, 1], ["s1", 1, 0], ["s2", 0, 1], ["s2", 0, 0]]), { replicates: 1000 });
+  it("paired ties give an exactly zero CI", () => {
+    const out: Outcome[] = [];
+    ["s1", "s2", "s3", "s4"].forEach((s) => {
+      for (let i = 0; i < 100; i++) out.push({ id: `${s}-${i}`, stratum: s, a: 1, b: 1, diff: 0 });
+    });
+    const r = analyzeEvidence(out, { replicates: 1000 });
+    expect(r.ciLow).toBe(0);
+    expect(r.ciHigh).toBe(0);
+    expect(r.conclusion).toBe("INCONCLUSIVE");
+  });
+
+  it("stratification pins a single live stratum exactly", () => {
+    const out: Outcome[] = [];
+    ["s1", "s2", "s3", "s4"].forEach((s) => {
+      for (let i = 0; i < 100; i++)
+        out.push(s === "s1" ? { id: `${s}-${i}`, stratum: s, a: 1, b: 0, diff: 1 } : { id: `${s}-${i}`, stratum: s, a: 0, b: 0, diff: 0 });
+    });
+    const r = analyzeEvidence(out, { replicates: 1000 });
+    expect(r.ciLow).toBe(0.25);
+    expect(r.ciHigh).toBe(0.25);
+    expect(r.conclusion).toBe("MODEL_A");
+  });
+
+  it("prng has full range and no index bias", () => {
+    const rand = mulberry32(hashSeedString("uniformity-probe"));
+    const buckets = new Array(100).fill(0);
+    for (let i = 0; i < 100000; i++) {
+      const v = rand();
+      expect(v >= 0 && v < 1).toBe(true);
+      buckets[Math.floor(v * 100)]++;
+    }
+    expect(Math.max(...buckets) / Math.min(...buckets)).toBeLessThan(1.25);
+  });
+
+  it("returns the full contracted struct", () => {    const r = analyzeEvidence(mk([["s1", 1, 1], ["s1", 1, 0], ["s2", 0, 1], ["s2", 0, 0]]), { replicates: 1000 });
     expect(r.bothCorrect).toBe(1);
     expect(r.bothWrong).toBe(1);
     expect(r.aOnly).toBe(1);
