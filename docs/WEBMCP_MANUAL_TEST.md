@@ -7,6 +7,8 @@
 - [x] page visibly changes (ui buttons render dispute/hybrid/evidence/verify live)
 - [x] result returned: MODEL_B, reproducesTarget true
 
+all four called live: read_dispute ok, answer_parser -> MODEL_A no-flip, evidence strata+sample ok, verify_witness VERIFIED unique reasoning_budget.
+
 ## attempt log (2026-09-02, tunnel deploy)
 
 mocks here don't prove competition compat. dev stops until a human checks a public https deploy in a supported setup (desktop app built-in browser, Sol or Terra, updated app, non-Enterprise/Edu).
