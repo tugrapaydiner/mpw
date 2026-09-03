@@ -27,6 +27,7 @@ export interface ManifestCore {
   declared: string;
   seeds: Record<string, JsonValue>;
   evidence: JsonValue;
+  [k: string]: JsonValue;
 }
 
 export function buildPublicationManifestCore({

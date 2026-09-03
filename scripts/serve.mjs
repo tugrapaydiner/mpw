@@ -1,18 +1,18 @@
-// tiny static server, no deps. localhost counts as secure context.
+// tiny static server, no deps. serves dist by default, any dir via argv.
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname, join, normalize, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const root = join(dirname(fileURLToPath(import.meta.url)), "..", process.argv[2] ?? "dist");
 const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".css": "text/css" };
 
 createServer(async (req, res) => {
   try {
     const urlPath = decodeURIComponent(req.url.split("?")[0]);
     const candidates = [
-      normalize(join(root, req.url === "/" ? "public/index.html" : urlPath)),
-      normalize(join(root, "public", urlPath)),
+      normalize(join(root, urlPath === "/" ? "index.html" : urlPath)),
+      normalize(join(root, "index.html")),
     ];
     let data = null;
     let path = candidates[0];
