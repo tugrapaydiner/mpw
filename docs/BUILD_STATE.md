@@ -1,8 +1,8 @@
-# build state (updated 2026-09-03, P42)
+# build state (updated 2026-09-03, P43)
 
 WEBMCP_SMOKE_REAL=PASS
 PRODUCTION_WEBMCP_AUTOMATED=PASS
-NEXT=SUBMIT (deadline TODAY 1pm PDT; record video + manual gates still open)
+NEXT=SUBMIT (deadline TODAY 1pm PDT; verdict NOT_READY: video+proof+about+submit are human blockers)
 stack: React 19 + TS 5.9 strict + Vite 8 + Vitest 4 + eslint.
 layout: src/{app,components,engine,state,types,webmcp}, data/{publications,fixtures}, scripts, tests/{engine,fixtures,webmcp}, docs/phase-reports.
 gates: `npm run verify` = typecheck + lint + tests + build. green required.
