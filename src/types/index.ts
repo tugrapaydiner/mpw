@@ -42,6 +42,7 @@ export interface Stats {
 
 export interface JsonSchema {
   type: string;
+  description?: string;
   properties?: Record<string, unknown>;
   required?: string[];
   additionalProperties?: boolean;

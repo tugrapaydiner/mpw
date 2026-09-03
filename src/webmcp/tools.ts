@@ -1,80 +1,99 @@
-// four top-level-page tools, same application services as the ui (caller AGENT).
-// no answer in descriptions.
+// exactly four tools, same application services as the ui (caller AGENT).
+// handlers validate independently, never calculate, never decide.
 import {
   readDispute,
   runCounterfactualOp,
   inspectEvidenceOp,
   verifyWitnessOp,
 } from "../state/investigation.js";
-import { EXPOSED_DIMENSIONS } from "../engine/mpwFixture.js";
-import { STRATA } from "../engine/mpwFixture.js";
+import { EXPOSED_DIMENSIONS, STRATA } from "../engine/mpwFixture.js";
 import type { JsonSchema, ToolDef } from "../types";
 
 const DIM_ENUM = [...EXPOSED_DIMENSIONS].sort();
 const STRATUM_ENUM = STRATA.map((s) => s.name);
 
+const DIM_GLOSS =
+  "exposed protocol dimension: reasoning_budget (thinking effort per item), " +
+  "answer_parser (strictness of answer parsing), retry_policy (whether one retry is allowed), " +
+  "tool_access (breadth of tool use)";
+
 function rejectExtra(args: Record<string, unknown> | undefined, allowed: string[]): void {
   for (const k of Object.keys(args ?? {})) if (!allowed.includes(k)) throw new Error(`unexpected prop: ${k}`);
 }
 
-function asSubset(v: unknown): string[] {
-  if (!Array.isArray(v)) throw new Error("subset must be an array");
+function asArray(v: unknown, name: string): string[] {
+  if (!Array.isArray(v)) throw new Error(`${name} must be an array`);
   return [...v] as string[];
 }
 
-export const READONLY = { readOnlyHint: true };
-
-interface ModelContext {
-  registerTool: (tool: Record<string, unknown>) => Promise<unknown>;
-}
-
-function modelContext(): ModelContext | null {
-  const g = globalThis as unknown as {
-    document?: { modelContext?: ModelContext };
-    navigator?: { modelContext?: ModelContext };
-  };
-  const mc = g.document?.modelContext ?? g.navigator?.modelContext ?? null;
-  return mc;
-}
-
-const dimArray = (): JsonSchema => ({
+const dimArray = (name: string): JsonSchema => ({
   type: "array",
+  description: `${name}: ${DIM_GLOSS}`,
   items: { type: "string", enum: DIM_ENUM } as unknown as JsonSchema,
   minItems: 0,
   maxItems: 4,
   uniqueItems: true,
 });
 
+const disputeIdProp = (): JsonSchema => ({
+  type: "string",
+  description: "dispute id from read_dispute; omit to use the single canonical dispute",
+});
+
+const baseLabProp = (): JsonSchema => ({
+  type: "string",
+  description: "lab whose protocol is the starting point; the target conclusion is always the other lab's",
+  enum: ["A", "B"],
+});
+
 export const TOOLS: ToolDef[] = [
   {
     name: "read_dispute",
     description:
-      "Summarizes the Lab A vs Lab B evaluation dispute: models, benchmark makeup, exposed protocol dimensions, and each lab's declared headline. Good starting context before running experiments.",
-    inputSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
-    annotations: { ...READONLY },
-    execute: async () => {
-      const r = readDispute("AGENT");
-      if (!r.ok) return { ok: false, error: r.error } as Record<string, unknown>;
-      return { ok: true, dispute: r.dispute } as Record<string, unknown>;
+      "Summarizes the active evaluation dispute: both labs' conclusions with scores and intervals, benchmark identity, evidence coverage, integrity status, and the protocol dimensions where the labs differ.",
+    inputSchema: {
+      type: "object",
+      properties: { disputeId: disputeIdProp() },
+      required: [],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: true },
+    execute: async (args = {}) => {
+      try {
+        rejectExtra(args, ["disputeId"]);
+        const r = readDispute("AGENT", args["disputeId"]);
+        if (!r.ok) return { ok: false, code: r.code, error: r.error };
+        return { ok: true, ...JSON.parse(JSON.stringify(r.dispute)) };
+      } catch (e) {
+        return { ok: false, error: String((e as Error).message || e) };
+      }
     },
   },
   {
     name: "run_counterfactual",
     description:
-      "Evaluates one hybrid protocol built from Lab A by adopting exactly the given exposed dimensions from Lab B, with the deterministic simulator and stratified bootstrap. Returns accuracies, difference with 95% interval, conclusion, and whether it reproduces the Lab B conclusion.",
+      "Builds one hybrid protocol from a lab baseline by adopting selected dimensions from the other lab, then runs the deterministic synthetic evaluation with paired statistics.",
     inputSchema: {
       type: "object",
-      properties: { subset: dimArray() },
-      required: ["subset"],
+      properties: {
+        disputeId: disputeIdProp(),
+        baseLab: baseLabProp(),
+        adopt: dimArray("dimensions taken from the other lab; empty re-runs the baseline as a control"),
+      },
+      required: ["baseLab", "adopt"],
       additionalProperties: false,
     },
-    annotations: { ...READONLY },
+    annotations: { readOnlyHint: false },
     execute: async (args = {}) => {
       try {
-        rejectExtra(args, ["subset"]);
-        const r = runCounterfactualOp("AGENT", asSubset(args["subset"]));
-        if (!r.ok) return { ok: false, error: r.error };
-        return { ok: true, result: r.result };
+        rejectExtra(args, ["disputeId", "baseLab", "adopt"]);
+        const r = runCounterfactualOp("AGENT", {
+          disputeId: args["disputeId"],
+          baseLab: args["baseLab"],
+          adopt: asArray(args["adopt"], "adopt"),
+        });
+        if (!r.ok) return { ok: false, code: r.code, error: r.error };
+        return { ok: true, ...r.result };
       } catch (e) {
         return { ok: false, error: String((e as Error).message || e) };
       }
@@ -83,26 +102,41 @@ export const TOOLS: ToolDef[] = [
   {
     name: "inspect_evidence",
     description:
-      "Shows supporting evidence for one hybrid protocol: per-stratum accuracy plus a small sample of item outcomes. Handy for sanity-checking a result without pulling all 400 items.",
+      "Reads stored diagnostics for a completed experiment: the numbers behind a result — coverage, paired outcome counts, parser, retry and tool behavior, category summary, and evidence hash.",
     inputSchema: {
       type: "object",
       properties: {
-        subset: dimArray(),
-        stratum: { type: "string", enum: STRATUM_ENUM } as unknown as JsonSchema,
-        limit: { type: "integer", minimum: 1, maximum: 20, default: 5 } as unknown as JsonSchema,
+        experimentId: {
+          type: "string",
+          description: "experiment id returned by run_counterfactual",
+        },
+        category: {
+          type: "string",
+          description: "optional stratum slice; omit for all four strata",
+          enum: STRATUM_ENUM,
+        } as unknown as JsonSchema,
+        limit: {
+          type: "integer",
+          description: "sample receipts, 1 to 20, default 5; hundreds are never returned",
+          minimum: 1,
+          maximum: 20,
+          default: 5,
+        } as unknown as JsonSchema,
       },
-      required: ["subset"],
+      required: ["experimentId"],
       additionalProperties: false,
     },
-    annotations: { ...READONLY },
+    annotations: { readOnlyHint: true },
     execute: async (args = {}) => {
       try {
-        rejectExtra(args, ["subset", "stratum", "limit"]);
-        const stratum = (args["stratum"] as string | undefined) ?? null;
-        const limit = (args["limit"] as number | undefined) ?? 5;
-        const r = inspectEvidenceOp("AGENT", asSubset(args["subset"]), { stratum, limit });
-        if (!r.ok) return { ok: false, error: r.error };
-        return { ok: true, result: r.result };
+        rejectExtra(args, ["experimentId", "category", "limit"]);
+        const r = inspectEvidenceOp("AGENT", {
+          experimentId: args["experimentId"],
+          category: args["category"],
+          limit: args["limit"],
+        });
+        if (!r.ok) return { ok: false, code: r.code, error: r.error };
+        return { ok: true, ...r.result };
       } catch (e) {
         return { ok: false, error: String((e as Error).message || e) };
       }
@@ -111,30 +145,39 @@ export const TOOLS: ToolDef[] = [
   {
     name: "verify_witness",
     description:
-      "Deterministically checks one proposed witness subset against every exposed combination. Returns VERIFIED, NOT_SUFFICIENT, NON_MINIMUM, or UNRESOLVED with the global minimum. The only place that certifies an answer.",
+      "Exhaustively checks every combination of the exposed dimensions and decides whether a proposed candidate reproduces the other lab's conclusion with the smallest possible dimension set. The target is the other lab's conclusion from read_dispute.",
     inputSchema: {
       type: "object",
-      properties: { candidateSubset: dimArray() },
-      required: ["candidateSubset"],
+      properties: {
+        disputeId: disputeIdProp(),
+        baseLab: baseLabProp(),
+        candidate: dimArray("proposed witness subset; empty is a legal vacuous check"),
+      },
+      required: ["baseLab", "candidate"],
       additionalProperties: false,
     },
-    annotations: { ...READONLY },
+    annotations: { readOnlyHint: false },
     execute: async (args = {}) => {
       try {
-        rejectExtra(args, ["candidateSubset"]);
-        if (!Array.isArray(args["candidateSubset"])) throw new Error("candidateSubset must be an array");
-        const r = verifyWitnessOp("AGENT", [...(args["candidateSubset"] as string[])]);
-        if (!r.ok) {
-          if (r.error.includes("SOURCE_INTEGRITY_FAILURE"))
-            return { ok: false, code: "SOURCE_INTEGRITY_FAILURE", error: r.error };
-          return { ok: false, error: r.error };
-        }
-        return { ok: true, result: r.result };
+        rejectExtra(args, ["disputeId", "baseLab", "candidate"]);
+        const r = verifyWitnessOp("AGENT", {
+          disputeId: args["disputeId"],
+          baseLab: args["baseLab"],
+          candidate: asArray(args["candidate"], "candidate"),
+        });
+        if (!r.ok) return { ok: false, code: r.code, error: r.error };
+        const { certificate, limitation, ...rest } = r.result as unknown as Record<string, unknown>;
+        const cert = certificate as { id: string; hash: string } | null;
+        return {
+          ok: true,
+          ...rest,
+          subsetsEvaluated: (rest as { checkedCount: number }).checkedCount,
+          subsetsTotal: (rest as { totalSubsets: number }).totalSubsets,
+          certificate: cert,
+          limitation,
+        };
       } catch (e) {
-        const msg = String((e as Error).message || e);
-        if (msg.includes("SOURCE_INTEGRITY_FAILURE"))
-          return { ok: false, code: "SOURCE_INTEGRITY_FAILURE", error: msg };
-        return { ok: false, error: msg };
+        return { ok: false, error: String((e as Error).message || e) };
       }
     },
   },
@@ -148,11 +191,21 @@ export function __resetWebmcpRegistrationForTests(): void {
 
 export async function registerWebMcpTools(): Promise<{ registered: string[]; reason?: string }> {
   if (done) return { registered: [], reason: "already-registered" };
-  const mc = modelContext();
+  const g = globalThis as unknown as {
+    document?: { modelContext?: { registerTool: (tool: Record<string, unknown>) => Promise<unknown> } };
+    navigator?: { modelContext?: { registerTool: (tool: Record<string, unknown>) => Promise<unknown> } };
+  };
+  const mc = g.document?.modelContext ?? g.navigator?.modelContext ?? null;
   if (!mc || typeof mc.registerTool !== "function") return { registered: [], reason: "no-webmcp" };
   const out: string[] = [];
   for (const t of TOOLS) {
-    await mc.registerTool({ name: t.name, description: t.description, inputSchema: t.inputSchema, annotations: t.annotations, execute: t.execute });
+    await mc.registerTool({
+      name: t.name,
+      description: t.description,
+      inputSchema: t.inputSchema,
+      annotations: t.annotations,
+      execute: t.execute,
+    });
     out.push(t.name);
   }
   done = true;
