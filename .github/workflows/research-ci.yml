@@ -1,0 +1,44 @@
+name: Research CI
+
+on:
+  push:
+    branches:
+      - "research/**"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: research-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Full repository verification
+        run: npm run verify
+      - name: Reconciliation benchmark
+        run: npm run research:benchmark
+      - name: Write machine-readable benchmark result
+        if: always()
+        run: npm run research:benchmark:write
+      - name: Upload benchmark result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reconciliation-benchmark-${{ github.sha }}
+          path: data/benchmarks/reconciliation-results.json
+          if-no-files-found: error

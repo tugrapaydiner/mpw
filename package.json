@@ -1,17 +1,20 @@
 {
   "name": "mpw",
   "version": "0.1.0",
-  "description": "Minimal Protocol Witness - deterministic reconciliation core (WebMCP tools call this, the LLM never calculates)",
+  "description": "Deterministic protocol-reconciliation research prototype with exact minimum-witness verification",
   "type": "module",
   "scripts": {
     "test": "vitest run",
     "fixtures": "vite-node scripts/generate-fixtures.mts",
     "bundles": "vite-node scripts/finalize-publications.mts",
     "certificate": "vite-node scripts/mint-certificate.mts",
+    "research:benchmark": "vite-node scripts/run-reconciliation-benchmark.mts",
+    "research:benchmark:write": "vite-node scripts/run-reconciliation-benchmark.mts --write",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src tests scripts vite.config.ts",
     "build": "tsc --noEmit && vite build",
     "verify": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "research:verify": "npm run verify && npm run research:benchmark",
     "start": "node scripts/serve.mjs dist",
     "dev": "vite"
   },

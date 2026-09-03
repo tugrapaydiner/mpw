@@ -1,5 +1,9 @@
-// deterministic global-minimum witness search. all co-minimums, never one pick.
+// Compatibility wrapper for the original engine API. The generic research
+// search owns the proof semantics; this module preserves the canonical caller
+// shape while exposing whether only the minimum layer or the full landscape
+// was actually evaluated.
 import type { Subset } from "../types";
+import { exactWitnessSearch } from "../research/search.js";
 
 const MAX_DIMENSIONS = 20;
 
@@ -17,34 +21,20 @@ export function binomialCoefficient(n: number, k: number): number {
 
 function validateDimensions(exposedDimensions: Subset): Subset {
   if (!Array.isArray(exposedDimensions)) throw new Error("exposedDimensions must be an array");
-  if (exposedDimensions.length > MAX_DIMENSIONS)
+  if (exposedDimensions.length > MAX_DIMENSIONS) {
     throw new Error(
-      `too many exposed dimensions for exhaustive proof (n=${exposedDimensions.length}, max=${MAX_DIMENSIONS}); group them first`
+      `too many exposed dimensions for this compatibility API (n=${exposedDimensions.length}, max=${MAX_DIMENSIONS}); use exactWitnessSearch with an explicit evaluation budget`
     );
+  }
   const seen = new Set<string>();
-  for (const d of exposedDimensions) {
-    if (typeof d !== "string" || d.length === 0)
+  for (const dimension of exposedDimensions) {
+    if (typeof dimension !== "string" || dimension.length === 0) {
       throw new Error("every exposed dimension must be a non-empty string");
-    if (seen.has(d)) throw new Error(`duplicate exposed dimension: ${d}`);
-    seen.add(d);
+    }
+    if (seen.has(dimension)) throw new Error(`duplicate exposed dimension: ${dimension}`);
+    seen.add(dimension);
   }
   return [...exposedDimensions].sort();
-}
-
-function* indexCombinations(n: number, k: number): Generator<number[]> {
-  if (k === 0) {
-    yield [];
-    return;
-  }
-  const idx = Array.from({ length: k }, (_, i) => i);
-  for (;;) {
-    yield [...idx];
-    let i = k - 1;
-    while (i >= 0 && idx[i] === n - k + i) i--;
-    if (i < 0) return;
-    idx[i]++;
-    for (let j = i + 1; j < k; j++) idx[j] = idx[j - 1] + 1;
-  }
 }
 
 export function findMinimumWitnesses({
@@ -56,47 +46,28 @@ export function findMinimumWitnesses({
 }) {
   const sortedDimensions = validateDimensions(exposedDimensions);
   if (typeof isSufficient !== "function") throw new Error("isSufficient must be a function");
-  const n = sortedDimensions.length;
-  const totalSubsets = 2 ** n;
-  let checkedCount = 0;
-  const searchedCardinalities: number[] = [];
-
-  for (let k = 0; k <= n; k++) {
-    searchedCardinalities.push(k);
-    const winnersAtK: Subset[] = [];
-    for (const combo of indexCombinations(n, k)) {
-      const subset = combo.map((i) => sortedDimensions[i]);
-      const verdict = isSufficient([...subset]);
-      if (typeof verdict !== "boolean") throw new Error("isSufficient must return a boolean");
-      checkedCount++;
-      if (verdict) winnersAtK.push(subset);
-    }
-    if (winnersAtK.length > 0) {
-      const minimumWitnesses = winnersAtK.map((w) => [...w]);
-      const coMinimumWitnesses = winnersAtK.map((w) => [...w]);
-      return {
-        minimumCardinality: k as number | null,
-        minimumWitnesses,
-        coMinimumWitnesses,
-        status: "found",
-        checkedCount,
-        totalSubsets,
-        searchedCardinalities: [...searchedCardinalities],
-        exhaustive: true,
-        sortedDimensions: [...sortedDimensions],
-      };
-    }
-  }
-
+  const totalSubsets = 2 ** sortedDimensions.length;
+  const result = exactWitnessSearch({
+    dimensions: sortedDimensions,
+    isSufficient: (subset) => isSufficient([...subset] as Subset),
+    mode: "minimum",
+    maxEvaluations: totalSubsets,
+    captureAudit: false,
+  });
+  const minimumWitnesses = result.minimumWitnesses.map((witness) => [...witness] as Subset);
   return {
-    minimumCardinality: null as number | null,
-    minimumWitnesses: [] as Subset[],
-    coMinimumWitnesses: [] as Subset[],
-    status: "none-sufficient",
-    checkedCount,
+    minimumCardinality: result.minimumCardinality,
+    minimumWitnesses,
+    coMinimumWitnesses: minimumWitnesses.map((witness) => [...witness] as Subset),
+    status: result.status === "FOUND" ? "found" : "none-sufficient",
+    checkedCount: result.evaluatedSubsets,
     totalSubsets,
-    searchedCardinalities: [...searchedCardinalities],
-    exhaustive: true,
+    searchedCardinalities: [...result.completedCardinalities],
+    // Deprecated compatibility field: true now means every subset was checked.
+    exhaustive: result.proof.landscapeExhaustive,
+    minimumProven: result.proof.minimumProven,
+    coMinimumComplete: result.proof.coMinimumComplete,
+    landscapeExhaustive: result.proof.landscapeExhaustive,
     sortedDimensions: [...sortedDimensions],
   };
 }
