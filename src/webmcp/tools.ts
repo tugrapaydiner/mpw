@@ -120,7 +120,14 @@ export const TOOLS: ToolDef[] = [
   },
 ];
 
+let done = false;
+
+export function __resetWebmcpRegistrationForTests(): void {
+  done = false;
+}
+
 export async function registerWebMcpTools(): Promise<{ registered: string[]; reason?: string }> {
+  if (done) return { registered: [], reason: "already-registered" };
   const mc = modelContext();
   if (!mc || typeof mc.registerTool !== "function") return { registered: [], reason: "no-webmcp" };
   const out: string[] = [];
@@ -128,5 +135,6 @@ export async function registerWebMcpTools(): Promise<{ registered: string[]; rea
     await mc.registerTool({ name: t.name, description: t.description, inputSchema: t.inputSchema, annotations: t.annotations, execute: t.execute });
     out.push(t.name);
   }
+  done = true;
   return { registered: out };
 }
