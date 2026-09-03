@@ -7,6 +7,8 @@ sources: https://webmcp.devpost.com/rules (OpenAI WebMCP Challenge rules), https
 - public repo with all source/assets/instructions. affects: repo hygiene.
 - open-source license, visible on repo page. affects: LICENSE file (MIT added).
 - <3min public youtube demo with audio covering build + webmcp. affects: human task, pending.
+- text description must cover: webmcp fit, better ux, what people+agents do together that was hard before, how webmcp was implemented. affects: submission form text, human task.
+- testing instructions for judges (they may judge from text/video alone). affects: keep readme + video self-explanatory.
 - english materials, free till judging ends (Sep 21 5pm PT). affects: no paywall, no auth.
 - new during submission period (Aug 25–Sep 3 2026) or documented webmcp extension. affects: eligibility record.
 - freeze repo/site/video after deadline. affects: release pin + fork to continue.
