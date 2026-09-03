@@ -20,17 +20,25 @@ verify is inferable from inputs/outputs and never enforced.
 
 - every schema: `type object`, `additionalProperties: false`, strict enums,
   arrays `uniqueItems: true`.
-- failure envelope: `{ok: false, code, error}` with concise single-sentence
-  error. success: `{ok: true, ...named payload}`.
+- failure envelope: `{ok: false, code, error}` with concise error plus
+  recovery hint (Chrome guidance: guide, never dead-end). e.g.
+  UNKNOWN_EXPERIMENT names run_counterfactual as the way to create one;
+  UNKNOWN_DISPUTE returns the valid dispute id.
 - error codes:
   - recoverable bad input (fix args, retry): `UNKNOWN_DISPUTE`,
     `UNKNOWN_EXPERIMENT`, `UNKNOWN_PROTOCOL_DIMENSION`,
     `DUPLICATE_DIMENSION`, `INVALID_BASE_LAB`, `INVALID_CANDIDATE`.
   - scientific integrity failure (retry never helps, investigate):
     `SOURCE_INTEGRITY_FAILURE`, `EVIDENCE_INCOMPLETE`.
-- shared enums: `baseLab: A | B`; `ProtocolDimension: reasoning_budget |
-  answer_parser | retry_policy | tool_access`; category: the four stratum
-  names from read_dispute.
+- shared enums: `baseLab: A | B` (the lab whose protocol is the starting
+  point; the target conclusion is always the other lab's);
+  `ProtocolDimension: reasoning_budget | answer_parser | retry_policy |
+  tool_access` (thinking effort per item | strictness of answer parsing |
+  whether one retry is allowed | breadth of tool use). descriptions repeat
+  these glosses so natural language ("budget", "parser", "retry", "tools")
+  maps to enum values without a README.
+- `disputeId` is optional on TOOLS 2-4 (defaults to the single canonical
+  dispute; validated when given). required nowhere, so no order is forced.
 - canonical dispute id (derived, never authored):
   `mpw-dispute-59b0f51c99bcffcd` = content hash of the two finalized
   publication hashes (`0dfd8b43eb82576c`, `63d6d1154a1aaa9b`).
@@ -42,10 +50,12 @@ conclusions with scores and intervals, benchmark identity, evidence
 coverage, integrity status, and the protocol dimensions where the labs
 differ."
 
-input: `{disputeId: string}` required. unknown id -> `UNKNOWN_DISPUTE`.
+input: `{disputeId: string}` optional (defaults to canonical; explicit
+mismatch -> `UNKNOWN_DISPUTE` carrying the valid id).
 
 output (concise):
-`{disputeId, benchmark: {id, version}, models, sources: [{lab,
+`{disputeId, labs: ["A", "B"], benchmark: {id, version}, models, strata:
+[string x4], sources: [{lab,
 publicationId, conclusion, scoreA, scoreB, delta, ciLow, ciHigh,
 coverage}], differences: ProtocolDimension[4], coverage: {expectedItems,
 accountedItems, percent}, integrity: {status, checks: [{source, declared,
@@ -61,9 +71,12 @@ description: "Builds one hybrid protocol from a lab baseline by adopting
 selected dimensions from the other lab, then runs the deterministic
 synthetic evaluation with paired statistics."
 
-input: `{disputeId: string, baseLab: A|B, adoptFromOtherLab:
-ProtocolDimension[]}` all required, `minItems 0, maxItems 4`,
-`uniqueItems true`. unknown dim -> `UNKNOWN_PROTOCOL_DIMENSION`,
+input: `{disputeId?: string, baseLab: A|B, adopt: ProtocolDimension[]}`
+(`adopt`: dimensions taken from the other lab; the complement rule is
+stated in the property description). `baseLab` description: "lab whose
+protocol is the starting point". all but disputeId required, `minItems
+0, maxItems 4`, `uniqueItems true`. empty adopt re-runs the baseline
+(useful control). unknown dim -> `UNKNOWN_PROTOCOL_DIMENSION`,
 duplicates -> `DUPLICATE_DIMENSION`, bad lab -> `INVALID_BASE_LAB`.
 
 output (concise):
@@ -77,9 +90,9 @@ investigation history; the science itself is pure and repeatable).
 
 ## TOOL 3 — inspect_evidence
 
-description: "Reads stored diagnostics for a completed experiment:
-coverage, paired outcome counts, parser, retry and tool behavior, category
-summary, and evidence hash."
+description: "Reads stored diagnostics for a completed experiment: the
+numbers behind a result — coverage, paired outcome counts, parser, retry
+and tool behavior, category summary, and evidence hash."
 
 input: `{experimentId: string}` required, plus optional `category` enum
 (beneficial: slices one stratum) and optional `limit` integer 1..20,
@@ -97,11 +110,13 @@ annotations: `readOnlyHint: true`.
 ## TOOL 4 — verify_witness
 
 description: "Exhaustively checks every combination of the exposed
-dimensions and decides whether a proposed candidate reproduces the target
-conclusion with the smallest possible dimension set."
+dimensions and decides whether a proposed candidate reproduces the other
+lab's conclusion with the smallest possible dimension set. The target is
+the other lab's conclusion from read_dispute."
 
-input: `{disputeId: string, baseLab: A|B, candidate: ProtocolDimension[]}`
-all required. bad candidate -> `INVALID_CANDIDATE`.
+input: `{disputeId?: string, baseLab: A|B, candidate: ProtocolDimension[]}`
+all but disputeId required. bad candidate -> `INVALID_CANDIDATE`. an
+empty candidate is a legal vacuous check, not an error.
 
 output:
 `{status: VERIFIED | NOT_SUFFICIENT | NON_MINIMUM | UNRESOLVED, target,
@@ -127,9 +142,21 @@ certificate on VERIFIED).
   target MODEL_B, minimum 1, co-minimums listed, 17 evaluated of 16
   subsets (16 exhaustive + 1 candidate), certificate id/hash.
 
+## journeys (role-played, both succeed unforced)
+
+canonical: read_dispute -> run_counterfactual (one dimension) ->
+inspect_evidence (returned id) -> run more singles/pairs ->
+verify_witness (smallest reproducing set) -> certificate.
+alternate: verify_witness cold with a guessed well-formed candidate ->
+NOT_SUFFICIENT names nothing but the full minimum set is returned
+anyway; inspect before run -> UNKNOWN_EXPERIMENT pointing at
+run_counterfactual; run before read works (disputeId optional). no
+step is a prerequisite in code.
+
 ## gaps vs current implementation (P25 work)
 
-1. tools take no disputeId/baseLab; TOOL 3 takes subset, not experimentId.
+1. tools take no disputeId/baseLab; TOOL 3 takes subset, not experimentId;
+   adopt param unnamed.
 2. no session experiment registry backing UNKNOWN_EXPERIMENT.
 3. error codes unstructured (plain messages; only integrity has a code).
 4. service outputs lack parser/retry/tool diagnostics, paired counts,
