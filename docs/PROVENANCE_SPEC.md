@@ -50,6 +50,30 @@ against standard vectors (`""` -> `e3b0c44...`, `"abc"` -> `ba7816bf...`).
 certificate hash now delegate here. `hashExperiment` keeps the `experimentId`
 input shape (baseLab/sourceLab/subset/protocol/engine, no ui metadata).
 
+## finalized bundle hash boundary (P19)
+
+`PublicationManifestCore` (see `src/engine/mpwPublication.ts`) carries
+metadata only: schemaVersion, publicationId, synthetic publisher label,
+benchmark id/version, model ids, protocol, simulator/evaluator versions,
+declared deterministic result, source-integrity status. it contains NO hash.
+
+the finalized envelope adds, in order:
+
+1. `evidence`: receiptCount, itemCoverage, evidenceHash (over the full
+   regenerated receipt set, both models x all items).
+2. `hashes`: protocolHash (protocol record), benchmarkHash (id/version/
+   models/strata declaration order/items normalized by id), evidenceHash
+   (copy of the evidence-section value), manifestBodyHash
+   (`hashManifestBody(core)`).
+3. `manifestHash`: `contentHash({core, evidence, hashes})` — the whole
+   envelope EXCEPT itself. nonrecursive by construction: a manifest never
+   contains its own hash.
+
+load re-derives all five values from live engine inputs and compares
+exactly; the subset is identified by matching the protocol against the two
+lab worlds. key order anywhere is irrelevant (JCS); receipt/item order is
+normalized away; strata/models declaration order is significant.
+
 ## meaning
 
 a hash proves canonical content identity/integrity ONLY: same bytes in,

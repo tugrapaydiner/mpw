@@ -1,0 +1,55 @@
+{
+  "kind": "FinalizedPublicationBundle",
+  "core": {
+    "kind": "PublicationManifestCore",
+    "schemaVersion": 1,
+    "publicationId": "mpw-pub-lab-b/1",
+    "publisher": "Lab B",
+    "benchmark": {
+      "id": "mpw-bench",
+      "version": 1
+    },
+    "models": [
+      "MODEL_A",
+      "MODEL_B"
+    ],
+    "protocol": {
+      "reasoning_budget": 2048,
+      "answer_parser": "strict",
+      "retry_policy": "no-retry",
+      "tool_access": "restricted"
+    },
+    "simulator": {
+      "seed": "mpw-canonical-v1",
+      "version": "mpw-sim/1"
+    },
+    "evaluator": {
+      "seed": "mpw-boot-v1",
+      "replicates": 10000,
+      "algorithm": "mpw-stratified-paired-bootstrap",
+      "version": 1
+    },
+    "declared": {
+      "scoreA": 0.315,
+      "scoreB": 0.525,
+      "delta": -0.21,
+      "ciLow": -0.2675,
+      "ciHigh": -0.1525,
+      "conclusion": "MODEL_B",
+      "coverage": 400
+    },
+    "sourceIntegrity": "OK"
+  },
+  "evidence": {
+    "receiptCount": 800,
+    "itemCoverage": 400,
+    "evidenceHash": "c26a73eae54a494f635eedfe035e1c7c98b45aebb73c3a5548a1dd4b148d1c75"
+  },
+  "hashes": {
+    "protocolHash": "f3c45d1c75db5fcee6552633443d416b1280916eb057729e24221205f70f2145",
+    "benchmarkHash": "f3a93b37ba00bf34d3474f6f33911bfab9fe26ead1ef728c454c6d3d9b255d34",
+    "evidenceHash": "c26a73eae54a494f635eedfe035e1c7c98b45aebb73c3a5548a1dd4b148d1c75",
+    "manifestBodyHash": "c2b8b6d55d8e5294a94e288a130be03de60995d9d5b5c60919de8f2b818db6d0"
+  },
+  "manifestHash": "63d6d1154a1aaa9b216c27dbaaf261e49a22941cbf2cef3fe0dd9b440ff67c1c"
+}
