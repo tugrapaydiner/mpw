@@ -31,7 +31,7 @@ function modelContext(): ModelContext | null {
   return mc;
 }
 
-const dimArray = (required: boolean): JsonSchema => ({
+const dimArray = (): JsonSchema => ({
   type: "array",
   items: { type: "string", enum: DIM_ENUM } as unknown as JsonSchema,
   minItems: 0,
@@ -54,7 +54,7 @@ export const TOOLS: ToolDef[] = [
       "Evaluates one hybrid protocol built from Lab A by adopting exactly the given exposed dimensions from Lab B, with the deterministic simulator and stratified bootstrap. Returns accuracies, difference with 95% interval, conclusion, and whether it reproduces the Lab B conclusion.",
     inputSchema: {
       type: "object",
-      properties: { subset: dimArray(true) },
+      properties: { subset: dimArray() },
       required: ["subset"],
       additionalProperties: false,
     },
@@ -75,7 +75,7 @@ export const TOOLS: ToolDef[] = [
     inputSchema: {
       type: "object",
       properties: {
-        subset: dimArray(true),
+        subset: dimArray(),
         stratum: { type: "string", enum: STRATUM_ENUM } as unknown as JsonSchema,
         limit: { type: "integer", minimum: 1, maximum: 20, default: 5 } as unknown as JsonSchema,
       },
@@ -100,7 +100,7 @@ export const TOOLS: ToolDef[] = [
       "Deterministically checks one proposed witness subset against every exposed combination. Returns VERIFIED, NOT_SUFFICIENT, NON_MINIMUM, or UNRESOLVED with the global minimum. The only place that certifies an answer.",
     inputSchema: {
       type: "object",
-      properties: { candidateSubset: dimArray(true) },
+      properties: { candidateSubset: dimArray() },
       required: ["candidateSubset"],
       additionalProperties: false,
     },

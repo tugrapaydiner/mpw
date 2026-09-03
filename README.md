@@ -17,7 +17,7 @@ Simulator: `simulateItem` in `src/engine/mpwSimulator.ts` — hashed draws, no o
 my CIs only cover resampling these items with the same category mix. not inference repeats, training, deployment, future benchmarks, or general capability. same note lives in `docs/UNCERTAINTY.md` and will go in the certificate.
 
 ## How I run it
-- `npm test` (vitest, 50 passing), `npm run build` (tsc + vite, static dist), `npm start` serves dist on 8000, `npm run dev` for local dev.
+- `npm test` (vitest, 50 passing), `npm run verify` (typecheck + lint + tests + build, all green to count), `npm run build` (static dist), `npm start` serves dist on 8000, `npm run dev` for local dev.
 - needs Node 20+.
 
 ## Next

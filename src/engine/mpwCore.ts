@@ -158,8 +158,15 @@ export function pairedStats(diffs: number[]) {
   let sum = 0;
   for (const d of diffs) sum += d;
   const mean = sum / n;
-  let sd = 0, se = 0, ciLow = mean, ciHigh = mean, z = 0, p = 1;
+  let sd: number;
+  let se: number;
+  let ciLow: number;
+  let ciHigh: number;
+  let z: number;
+  let p: number;
   if (n === 1) {
+    sd = 0;
+    se = 0;
     ciLow = mean;
     ciHigh = mean;
     z = 0;

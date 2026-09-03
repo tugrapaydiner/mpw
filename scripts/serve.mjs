@@ -22,7 +22,9 @@ createServer(async (req, res) => {
         data = await readFile(c);
         path = c;
         break;
-      } catch {}
+      } catch {
+        // not here, try next candidate
+      }
     }
     if (data === null) throw new Error("missing");
     res.writeHead(200, { "Content-Type": types[extname(path)] ?? "application/octet-stream" });
