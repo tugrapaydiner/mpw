@@ -1,0 +1,192 @@
+/* premium scientific instrument. system fonts only, no imagery, no logos.
+   winners are never color-only: every state pairs shape + text. */
+:root {
+  --paper: #fbfbfa;
+  --ink: #1c1c1e;
+  --muted: #55565a;
+  --line: #d8d8dc;
+  --card: #ffffff;
+  --accent: #1e3a8a;
+  --good-ink: #14532d;
+  --good-bg: #e3f2e7;
+  --warn-ink: #7c2d12;
+  --warn-bg: #fbeedd;
+  --tag-h: #dbe4ff;
+  --tag-a: #e9defb;
+  --tag-s: #e5e6ea;
+  --focus: #b45309;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.mpw {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+}
+
+.mpw-skip {
+  position: absolute;
+  left: -9999px;
+}
+.mpw-skip:focus {
+  left: 1rem;
+  top: 1rem;
+  background: var(--card);
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--focus);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+button {
+  font: inherit;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--ink);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: 6px;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+button:not(:disabled):hover {
+  background: #eef0f4;
+}
+
+.mpw-banner {
+  border: 2px solid var(--ink);
+  background: var(--card);
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+}
+.mpw-banner p {
+  margin: 0.25rem 0;
+}
+
+.mpw-grid {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.mpw-grid > section {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.mpw-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0;
+}
+.mpw-card h2,
+.mpw-card h3 {
+  margin: 0.25rem 0 0.5rem;
+}
+
+.mpw-labA {
+  border-top: 6px solid var(--accent);
+}
+.mpw-labB {
+  border-top: 6px dashed var(--accent);
+}
+
+.mpw-scores {
+  font-variant-numeric: tabular-nums;
+}
+.mpw-conclusion {
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+}
+
+.mpw-tag {
+  display: inline-block;
+  padding: 0 0.4rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  border: 1px solid var(--line);
+}
+.mpw-tag-h { background: var(--tag-h); }
+.mpw-tag-a { background: var(--tag-a); }
+.mpw-tag-s { background: var(--tag-s); }
+
+.mpw-verdict-yes {
+  background: var(--good-bg);
+  color: var(--good-ink);
+  border: 1px solid var(--good-ink);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-weight: 700;
+}
+.mpw-verdict-no {
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+  border: 1px solid var(--warn-ink);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-weight: 700;
+}
+
+.mpw-subsets {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  margin: 0.5rem 0;
+}
+.mpw-subsets span {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 3px;
+  background: var(--accent);
+  display: inline-block;
+}
+
+.mpw-cert {
+  border: 2px solid var(--ink);
+  background: var(--card);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+}
+
+.mpw-muted {
+  color: var(--muted);
+}
+
+.mpw-flash {
+  animation: mpw-in 160ms ease-out;
+}
+@keyframes mpw-in {
+  from { opacity: 0.2; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
+}
+
+.mpw-busy {
+  animation: mpw-pulse 600ms ease-in-out infinite alternate;
+}
+@keyframes mpw-pulse {
+  from { opacity: 1; }
+  to { opacity: 0.55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mpw-flash,
+  .mpw-busy,
+  .mpw-subsets span {
+    animation: none;
+  }
+}

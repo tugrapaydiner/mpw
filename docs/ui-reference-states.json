@@ -1,0 +1,1126 @@
+{
+  "initial": {
+    "seq": 0,
+    "dispute": null,
+    "integrity": null,
+    "differences": null,
+    "experiments": [],
+    "selectedSubset": null,
+    "selectedExperiment": null,
+    "evidenceView": null,
+    "candidate": null,
+    "verification": null,
+    "certificate": null,
+    "activity": [],
+    "status": "ready",
+    "error": null
+  },
+  "after-read": {
+    "seq": 1,
+    "dispute": {
+      "disputeId": "mpw-dispute-59b0f51c99bcffcd",
+      "labs": [
+        "A",
+        "B"
+      ],
+      "models": [
+        "MODEL_A",
+        "MODEL_B"
+      ],
+      "benchmark": {
+        "id": "mpw-bench",
+        "version": 1
+      },
+      "strata": [
+        "multi-step-reasoning",
+        "quantitative-reasoning",
+        "instruction-following",
+        "tool-reasoning"
+      ],
+      "numItems": 400,
+      "exposedDimensions": [
+        "answer_parser",
+        "reasoning_budget",
+        "retry_policy",
+        "tool_access"
+      ],
+      "differences": [
+        "answer_parser",
+        "reasoning_budget",
+        "retry_policy",
+        "tool_access"
+      ],
+      "labA": {
+        "reasoning_budget": 8192,
+        "answer_parser": "tolerant",
+        "retry_policy": "one-retry",
+        "tool_access": "standard"
+      },
+      "labB": {
+        "reasoning_budget": 2048,
+        "answer_parser": "strict",
+        "retry_policy": "no-retry",
+        "tool_access": "restricted"
+      },
+      "sources": [
+        {
+          "lab": "A",
+          "publicationId": "mpw-pub-lab-a/1",
+          "conclusion": "MODEL_A",
+          "scoreA": 0.8675,
+          "scoreB": 0.76,
+          "delta": 0.1075,
+          "ciLow": 0.055,
+          "ciHigh": 0.16,
+          "coverage": 400
+        },
+        {
+          "lab": "B",
+          "publicationId": "mpw-pub-lab-b/1",
+          "conclusion": "MODEL_B",
+          "scoreA": 0.315,
+          "scoreB": 0.525,
+          "delta": -0.21,
+          "ciLow": -0.2675,
+          "ciHigh": -0.1525,
+          "coverage": 400
+        }
+      ],
+      "coverage": {
+        "expectedItems": 400,
+        "accountedItems": 400,
+        "percent": 100
+      },
+      "declarations": [
+        {
+          "source": "Lab A",
+          "declared": "MODEL_A"
+        },
+        {
+          "source": "Lab B",
+          "declared": "MODEL_B"
+        }
+      ],
+      "seeds": {
+        "sim": "mpw-canonical-v1",
+        "boot": "mpw-boot-v1",
+        "replicates": 10000
+      }
+    },
+    "integrity": {
+      "status": "OK",
+      "checks": [
+        {
+          "source": "Lab A",
+          "declared": "MODEL_A",
+          "recomputed": "MODEL_A",
+          "match": true
+        },
+        {
+          "source": "Lab B",
+          "declared": "MODEL_B",
+          "recomputed": "MODEL_B",
+          "match": true
+        }
+      ]
+    },
+    "differences": [
+      "answer_parser",
+      "reasoning_budget",
+      "retry_policy",
+      "tool_access"
+    ],
+    "experiments": [],
+    "selectedSubset": null,
+    "selectedExperiment": null,
+    "evidenceView": null,
+    "candidate": null,
+    "verification": null,
+    "certificate": null,
+    "activity": [
+      {
+        "seq": 1,
+        "source": "HUMAN",
+        "op": "READ_DISPUTE",
+        "detail": "dispute loaded (MODEL_A,MODEL_B)"
+      }
+    ],
+    "status": "dispute loaded",
+    "error": null
+  },
+  "parser-experiment": {
+    "seq": 3,
+    "dispute": {
+      "disputeId": "mpw-dispute-59b0f51c99bcffcd",
+      "labs": [
+        "A",
+        "B"
+      ],
+      "models": [
+        "MODEL_A",
+        "MODEL_B"
+      ],
+      "benchmark": {
+        "id": "mpw-bench",
+        "version": 1
+      },
+      "strata": [
+        "multi-step-reasoning",
+        "quantitative-reasoning",
+        "instruction-following",
+        "tool-reasoning"
+      ],
+      "numItems": 400,
+      "exposedDimensions": [
+        "answer_parser",
+        "reasoning_budget",
+        "retry_policy",
+        "tool_access"
+      ],
+      "differences": [
+        "answer_parser",
+        "reasoning_budget",
+        "retry_policy",
+        "tool_access"
+      ],
+      "labA": {
+        "reasoning_budget": 8192,
+        "answer_parser": "tolerant",
+        "retry_policy": "one-retry",
+        "tool_access": "standard"
+      },
+      "labB": {
+        "reasoning_budget": 2048,
+        "answer_parser": "strict",
+        "retry_policy": "no-retry",
+        "tool_access": "restricted"
+      },
+      "sources": [
+        {
+          "lab": "A",
+          "publicationId": "mpw-pub-lab-a/1",
+          "conclusion": "MODEL_A",
+          "scoreA": 0.8675,
+          "scoreB": 0.76,
+          "delta": 0.1075,
+          "ciLow": 0.055,
+          "ciHigh": 0.16,
+          "coverage": 400
+        },
+        {
+          "lab": "B",
+          "publicationId": "mpw-pub-lab-b/1",
+          "conclusion": "MODEL_B",
+          "scoreA": 0.315,
+          "scoreB": 0.525,
+          "delta": -0.21,
+          "ciLow": -0.2675,
+          "ciHigh": -0.1525,
+          "coverage": 400
+        }
+      ],
+      "coverage": {
+        "expectedItems": 400,
+        "accountedItems": 400,
+        "percent": 100
+      },
+      "declarations": [
+        {
+          "source": "Lab A",
+          "declared": "MODEL_A"
+        },
+        {
+          "source": "Lab B",
+          "declared": "MODEL_B"
+        }
+      ],
+      "seeds": {
+        "sim": "mpw-canonical-v1",
+        "boot": "mpw-boot-v1",
+        "replicates": 10000
+      }
+    },
+    "integrity": {
+      "status": "OK",
+      "checks": [
+        {
+          "source": "Lab A",
+          "declared": "MODEL_A",
+          "recomputed": "MODEL_A",
+          "match": true
+        },
+        {
+          "source": "Lab B",
+          "declared": "MODEL_B",
+          "recomputed": "MODEL_B",
+          "match": true
+        }
+      ]
+    },
+    "differences": [
+      "answer_parser",
+      "reasoning_budget",
+      "retry_policy",
+      "tool_access"
+    ],
+    "experiments": [
+      {
+        "experimentId": "e30bf560e5bac6717615e96a7a3527627381c1e1149c94cf27b793bb7ba54c35",
+        "disputeId": "mpw-dispute-59b0f51c99bcffcd",
+        "baseLab": "A",
+        "subset": [
+          "answer_parser"
+        ],
+        "changedDimensions": [
+          "answer_parser"
+        ],
+        "accA": 0.7875,
+        "accB": 0.7225,
+        "mean": 0.065,
+        "ciLow": 0.01,
+        "ciHigh": 0.12,
+        "conclusion": "MODEL_A",
+        "reproducesTarget": false,
+        "coverage": 400
+      }
+    ],
+    "selectedSubset": [
+      "answer_parser"
+    ],
+    "selectedExperiment": {
+      "experimentId": "e30bf560e5bac6717615e96a7a3527627381c1e1149c94cf27b793bb7ba54c35",
+      "disputeId": "mpw-dispute-59b0f51c99bcffcd",
+      "baseLab": "A",
+      "subset": [
+        "answer_parser"
+      ],
+      "changedDimensions": [
+        "answer_parser"
+      ],
+      "accA": 0.7875,
+      "accB": 0.7225,
+      "mean": 0.065,
+      "ciLow": 0.01,
+      "ciHigh": 0.12,
+      "conclusion": "MODEL_A",
+      "reproducesTarget": false,
+      "coverage": 400
+    },
+    "evidenceView": {
+      "subset": [
+        "answer_parser"
+      ],
+      "baseLab": "A",
+      "conclusion": "MODEL_A",
+      "strata": [
+        {
+          "stratum": "multi-step-reasoning",
+          "n": 100,
+          "accA": 0.77,
+          "accB": 0.72
+        },
+        {
+          "stratum": "quantitative-reasoning",
+          "n": 100,
+          "accA": 0.85,
+          "accB": 0.69
+        },
+        {
+          "stratum": "instruction-following",
+          "n": 100,
+          "accA": 0.72,
+          "accB": 0.67
+        },
+        {
+          "stratum": "tool-reasoning",
+          "n": 100,
+          "accA": 0.81,
+          "accB": 0.81
+        }
+      ],
+      "categorySummary": [
+        {
+          "stratum": "multi-step-reasoning",
+          "n": 100,
+          "accA": 0.77,
+          "accB": 0.72
+        },
+        {
+          "stratum": "quantitative-reasoning",
+          "n": 100,
+          "accA": 0.85,
+          "accB": 0.69
+        },
+        {
+          "stratum": "instruction-following",
+          "n": 100,
+          "accA": 0.72,
+          "accB": 0.67
+        },
+        {
+          "stratum": "tool-reasoning",
+          "n": 100,
+          "accA": 0.81,
+          "accB": 0.81
+        }
+      ],
+      "sample": [
+        {
+          "id": "item-000",
+          "stratum": "multi-step-reasoning",
+          "a": 1,
+          "b": 1
+        },
+        {
+          "id": "item-001",
+          "stratum": "multi-step-reasoning",
+          "a": 1,
+          "b": 1
+        },
+        {
+          "id": "item-002",
+          "stratum": "multi-step-reasoning",
+          "a": 1,
+          "b": 1
+        },
+        {
+          "id": "item-003",
+          "stratum": "multi-step-reasoning",
+          "a": 1,
+          "b": 1
+        },
+        {
+          "id": "item-004",
+          "stratum": "multi-step-reasoning",
+          "a": 0,
+          "b": 1
+        }
+      ],
+      "coverage": 400,
+      "pairedCounts": {
+        "bothCorrect": 238,
+        "bothWrong": 34,
+        "aOnly": 77,
+        "bOnly": 51
+      },
+      "parserFailures": 80,
+      "retry": {
+        "retried": 272,
+        "recovered": 76
+      },
+      "tool": {
+        "needed": 119,
+        "penalized": 0
+      },
+      "evidenceHash": "15799ac004e120f3a6d7510bb4191ff38f03fe48fc36ab7f95b0f48aed157e8e"
+    },
+    "candidate": null,
+    "verification": null,
+    "certificate": null,
+    "activity": [
+      {
+        "seq": 1,
+        "source": "HUMAN",
+        "op": "READ_DISPUTE",
+        "detail": "dispute loaded (MODEL_A,MODEL_B)"
+      },
+      {
+        "seq": 2,
+        "source": "HUMAN",
+        "op": "RUN_COUNTERFACTUAL",
+        "detail": "A:[\"answer_parser\"] -> MODEL_A (e30bf560e5ba)"
+      },
+      {
+        "seq": 3,
+        "source": "HUMAN",
+        "op": "INSPECT_EVIDENCE",
+        "detail": "e30bf560e5ba -> MODEL_A"
+      }
+    ],
+    "status": "evidence inspected",
+    "error": null
+  },
+  "budget-experiment": {
+    "seq": 5,
+    "dispute": {
+      "disputeId": "mpw-dispute-59b0f51c99bcffcd",
+      "labs": [
+        "A",
+        "B"
+      ],
+      "models": [
+        "MODEL_A",
+        "MODEL_B"
+      ],
+      "benchmark": {
+        "id": "mpw-bench",
+        "version": 1
+      },
+      "strata": [
+        "multi-step-reasoning",
+        "quantitative-reasoning",
+        "instruction-following",
+        "tool-reasoning"
+      ],
+      "numItems": 400,
+      "exposedDimensions": [
+        "answer_parser",
+        "reasoning_budget",
+        "retry_policy",
+        "tool_access"
+      ],
+      "differences": [
+        "answer_parser",
+        "reasoning_budget",
+        "retry_policy",
+        "tool_access"
+      ],
+      "labA": {
+        "reasoning_budget": 8192,
+        "answer_parser": "tolerant",
+        "retry_policy": "one-retry",
+        "tool_access": "standard"
+      },
+      "labB": {
+        "reasoning_budget": 2048,
+        "answer_parser": "strict",
+        "retry_policy": "no-retry",
+        "tool_access": "restricted"
+      },
+      "sources": [
+        {
+          "lab": "A",
+          "publicationId": "mpw-pub-lab-a/1",
+          "conclusion": "MODEL_A",
+          "scoreA": 0.8675,
+          "scoreB": 0.76,
+          "delta": 0.1075,
+          "ciLow": 0.055,
+          "ciHigh": 0.16,
+          "coverage": 400
+        },
+        {
+          "lab": "B",
+          "publicationId": "mpw-pub-lab-b/1",
+          "conclusion": "MODEL_B",
+          "scoreA": 0.315,
+          "scoreB": 0.525,
+          "delta": -0.21,
+          "ciLow": -0.2675,
+          "ciHigh": -0.1525,
+          "coverage": 400
+        }
+      ],
+      "coverage": {
+        "expectedItems": 400,
+        "accountedItems": 400,
+        "percent": 100
+      },
+      "declarations": [
+        {
+          "source": "Lab A",
+          "declared": "MODEL_A"
+        },
+        {
+          "source": "Lab B",
+          "declared": "MODEL_B"
+        }
+      ],
+      "seeds": {
+        "sim": "mpw-canonical-v1",
+        "boot": "mpw-boot-v1",
+        "replicates": 10000
+      }
+    },
+    "integrity": {
+      "status": "OK",
+      "checks": [
+        {
+          "source": "Lab A",
+          "declared": "MODEL_A",
+          "recomputed": "MODEL_A",
+          "match": true
+        },
+        {
+          "source": "Lab B",
+          "declared": "MODEL_B",
+          "recomputed": "MODEL_B",
+          "match": true
+        }
+      ]
+    },
+    "differences": [
+      "answer_parser",
+      "reasoning_budget",
+      "retry_policy",
+      "tool_access"
+    ],
+    "experiments": [
+      {
+        "experimentId": "e30bf560e5bac6717615e96a7a3527627381c1e1149c94cf27b793bb7ba54c35",
+        "disputeId": "mpw-dispute-59b0f51c99bcffcd",
+        "baseLab": "A",
+        "subset": [
+          "answer_parser"
+        ],
+        "changedDimensions": [
+          "answer_parser"
+        ],
+        "accA": 0.7875,
+        "accB": 0.7225,
+        "mean": 0.065,
+        "ciLow": 0.01,
+        "ciHigh": 0.12,
+        "conclusion": "MODEL_A",
+        "reproducesTarget": false,
+        "coverage": 400
+      },
+      {
+        "experimentId": "011df65a8136fbe560d91970750129b83f7d079062aaafd2973b99885a4e0820",
+        "disputeId": "mpw-dispute-59b0f51c99bcffcd",
+        "baseLab": "A",
+        "subset": [
+          "reasoning_budget"
+        ],
+        "changedDimensions": [
+          "reasoning_budget"
+        ],
+        "accA": 0.6025,
+        "accB": 0.725,
+        "mean": -0.1225,
+        "ciLow": -0.1825,
+        "ciHigh": -0.0625,
+        "conclusion": "MODEL_B",
+        "reproducesTarget": true,
+        "coverage": 400
+      }
+    ],
+    "selectedSubset": [
+      "reasoning_budget"
+    ],
+    "selectedExperiment": {
+      "experimentId": "011df65a8136fbe560d91970750129b83f7d079062aaafd2973b99885a4e0820",
+      "disputeId": "mpw-dispute-59b0f51c99bcffcd",
+      "baseLab": "A",
+      "subset": [
+        "reasoning_budget"
+      ],
+      "changedDimensions": [
+        "reasoning_budget"
+      ],
+      "accA": 0.6025,
+      "accB": 0.725,
+      "mean": -0.1225,
+      "ciLow": -0.1825,
+      "ciHigh": -0.0625,
+      "conclusion": "MODEL_B",
+      "reproducesTarget": true,
+      "coverage": 400
+    },
+    "evidenceView": {
+      "subset": [
+        "reasoning_budget"
+      ],
+      "baseLab": "A",
+      "conclusion": "MODEL_B",
+      "strata": [
+        {
+          "stratum": "multi-step-reasoning",
+          "n": 100,
+          "accA": 0.44,
+          "accB": 0.73
+        },
+        {
+          "stratum": "quantitative-reasoning",
+          "n": 100,
+          "accA": 0.6,
+          "accB": 0.69
+        },
+        {
+          "stratum": "instruction-following",
+          "n": 100,
+          "accA": 0.72,
+          "accB": 0.73
+        },
+        {
+          "stratum": "tool-reasoning",
+          "n": 100,
+          "accA": 0.65,
+          "accB": 0.75
+        }
+      ],
+      "categorySummary": [
+        {
+          "stratum": "multi-step-reasoning",
+          "n": 100,
+          "accA": 0.44,
+          "accB": 0.73
+        },
+        {
+          "stratum": "quantitative-reasoning",
+          "n": 100,
+          "accA": 0.6,
+          "accB": 0.69
+        },
+        {
+          "stratum": "instruction-following",
+          "n": 100,
+          "accA": 0.72,
+          "accB": 0.73
+        },
+        {
+          "stratum": "tool-reasoning",
+          "n": 100,
+          "accA": 0.65,
+          "accB": 0.75
+        }
+      ],
+      "sample": [
+        {
+          "id": "item-000",
+          "stratum": "multi-step-reasoning",
+          "a": 1,
+          "b": 1
+        },
+        {
+          "id": "item-001",
+          "stratum": "multi-step-reasoning",
+          "a": 1,
+          "b": 1
+        },
+        {
+          "id": "item-002",
+          "stratum": "multi-step-reasoning",
+          "a": 1,
+          "b": 1
+        },
+        {
+          "id": "item-003",
+          "stratum": "multi-step-reasoning",
+          "a": 0,
+          "b": 1
+        },
+        {
+          "id": "item-004",
+          "stratum": "multi-step-reasoning",
+          "a": 0,
+          "b": 0
+        }
+      ],
+      "coverage": 400,
+      "pairedCounts": {
+        "bothCorrect": 184,
+        "bothWrong": 53,
+        "aOnly": 57,
+        "bOnly": 106
+      },
+      "parserFailures": 0,
+      "retry": {
+        "retried": 381,
+        "recovered": 112
+      },
+      "tool": {
+        "needed": 119,
+        "penalized": 0
+      },
+      "evidenceHash": "bde0c006cbbbcaac10d6d386ed32fd626bfec3afd862933ce4a477f3dbfd7f18"
+    },
+    "candidate": null,
+    "verification": null,
+    "certificate": null,
+    "activity": [
+      {
+        "seq": 1,
+        "source": "HUMAN",
+        "op": "READ_DISPUTE",
+        "detail": "dispute loaded (MODEL_A,MODEL_B)"
+      },
+      {
+        "seq": 2,
+        "source": "HUMAN",
+        "op": "RUN_COUNTERFACTUAL",
+        "detail": "A:[\"answer_parser\"] -> MODEL_A (e30bf560e5ba)"
+      },
+      {
+        "seq": 3,
+        "source": "HUMAN",
+        "op": "INSPECT_EVIDENCE",
+        "detail": "e30bf560e5ba -> MODEL_A"
+      },
+      {
+        "seq": 4,
+        "source": "HUMAN",
+        "op": "RUN_COUNTERFACTUAL",
+        "detail": "A:[\"reasoning_budget\"] -> MODEL_B (011df65a8136)"
+      },
+      {
+        "seq": 5,
+        "source": "HUMAN",
+        "op": "INSPECT_EVIDENCE",
+        "detail": "011df65a8136 -> MODEL_B"
+      }
+    ],
+    "status": "evidence inspected",
+    "error": null
+  },
+  "verification-certificate": {
+    "seq": 7,
+    "dispute": {
+      "disputeId": "mpw-dispute-59b0f51c99bcffcd",
+      "labs": [
+        "A",
+        "B"
+      ],
+      "models": [
+        "MODEL_A",
+        "MODEL_B"
+      ],
+      "benchmark": {
+        "id": "mpw-bench",
+        "version": 1
+      },
+      "strata": [
+        "multi-step-reasoning",
+        "quantitative-reasoning",
+        "instruction-following",
+        "tool-reasoning"
+      ],
+      "numItems": 400,
+      "exposedDimensions": [
+        "answer_parser",
+        "reasoning_budget",
+        "retry_policy",
+        "tool_access"
+      ],
+      "differences": [
+        "answer_parser",
+        "reasoning_budget",
+        "retry_policy",
+        "tool_access"
+      ],
+      "labA": {
+        "reasoning_budget": 8192,
+        "answer_parser": "tolerant",
+        "retry_policy": "one-retry",
+        "tool_access": "standard"
+      },
+      "labB": {
+        "reasoning_budget": 2048,
+        "answer_parser": "strict",
+        "retry_policy": "no-retry",
+        "tool_access": "restricted"
+      },
+      "sources": [
+        {
+          "lab": "A",
+          "publicationId": "mpw-pub-lab-a/1",
+          "conclusion": "MODEL_A",
+          "scoreA": 0.8675,
+          "scoreB": 0.76,
+          "delta": 0.1075,
+          "ciLow": 0.055,
+          "ciHigh": 0.16,
+          "coverage": 400
+        },
+        {
+          "lab": "B",
+          "publicationId": "mpw-pub-lab-b/1",
+          "conclusion": "MODEL_B",
+          "scoreA": 0.315,
+          "scoreB": 0.525,
+          "delta": -0.21,
+          "ciLow": -0.2675,
+          "ciHigh": -0.1525,
+          "coverage": 400
+        }
+      ],
+      "coverage": {
+        "expectedItems": 400,
+        "accountedItems": 400,
+        "percent": 100
+      },
+      "declarations": [
+        {
+          "source": "Lab A",
+          "declared": "MODEL_A"
+        },
+        {
+          "source": "Lab B",
+          "declared": "MODEL_B"
+        }
+      ],
+      "seeds": {
+        "sim": "mpw-canonical-v1",
+        "boot": "mpw-boot-v1",
+        "replicates": 10000
+      }
+    },
+    "integrity": {
+      "status": "OK",
+      "checks": [
+        {
+          "source": "Lab A",
+          "declared": "MODEL_A",
+          "recomputed": "MODEL_A",
+          "match": true
+        },
+        {
+          "source": "Lab B",
+          "declared": "MODEL_B",
+          "recomputed": "MODEL_B",
+          "match": true
+        }
+      ]
+    },
+    "differences": [
+      "answer_parser",
+      "reasoning_budget",
+      "retry_policy",
+      "tool_access"
+    ],
+    "experiments": [
+      {
+        "experimentId": "e30bf560e5bac6717615e96a7a3527627381c1e1149c94cf27b793bb7ba54c35",
+        "disputeId": "mpw-dispute-59b0f51c99bcffcd",
+        "baseLab": "A",
+        "subset": [
+          "answer_parser"
+        ],
+        "changedDimensions": [
+          "answer_parser"
+        ],
+        "accA": 0.7875,
+        "accB": 0.7225,
+        "mean": 0.065,
+        "ciLow": 0.01,
+        "ciHigh": 0.12,
+        "conclusion": "MODEL_A",
+        "reproducesTarget": false,
+        "coverage": 400
+      },
+      {
+        "experimentId": "011df65a8136fbe560d91970750129b83f7d079062aaafd2973b99885a4e0820",
+        "disputeId": "mpw-dispute-59b0f51c99bcffcd",
+        "baseLab": "A",
+        "subset": [
+          "reasoning_budget"
+        ],
+        "changedDimensions": [
+          "reasoning_budget"
+        ],
+        "accA": 0.6025,
+        "accB": 0.725,
+        "mean": -0.1225,
+        "ciLow": -0.1825,
+        "ciHigh": -0.0625,
+        "conclusion": "MODEL_B",
+        "reproducesTarget": true,
+        "coverage": 400
+      }
+    ],
+    "selectedSubset": [
+      "reasoning_budget"
+    ],
+    "selectedExperiment": {
+      "experimentId": "011df65a8136fbe560d91970750129b83f7d079062aaafd2973b99885a4e0820",
+      "disputeId": "mpw-dispute-59b0f51c99bcffcd",
+      "baseLab": "A",
+      "subset": [
+        "reasoning_budget"
+      ],
+      "changedDimensions": [
+        "reasoning_budget"
+      ],
+      "accA": 0.6025,
+      "accB": 0.725,
+      "mean": -0.1225,
+      "ciLow": -0.1825,
+      "ciHigh": -0.0625,
+      "conclusion": "MODEL_B",
+      "reproducesTarget": true,
+      "coverage": 400
+    },
+    "evidenceView": {
+      "subset": [
+        "reasoning_budget"
+      ],
+      "baseLab": "A",
+      "conclusion": "MODEL_B",
+      "strata": [
+        {
+          "stratum": "multi-step-reasoning",
+          "n": 100,
+          "accA": 0.44,
+          "accB": 0.73
+        },
+        {
+          "stratum": "quantitative-reasoning",
+          "n": 100,
+          "accA": 0.6,
+          "accB": 0.69
+        },
+        {
+          "stratum": "instruction-following",
+          "n": 100,
+          "accA": 0.72,
+          "accB": 0.73
+        },
+        {
+          "stratum": "tool-reasoning",
+          "n": 100,
+          "accA": 0.65,
+          "accB": 0.75
+        }
+      ],
+      "categorySummary": [
+        {
+          "stratum": "multi-step-reasoning",
+          "n": 100,
+          "accA": 0.44,
+          "accB": 0.73
+        },
+        {
+          "stratum": "quantitative-reasoning",
+          "n": 100,
+          "accA": 0.6,
+          "accB": 0.69
+        },
+        {
+          "stratum": "instruction-following",
+          "n": 100,
+          "accA": 0.72,
+          "accB": 0.73
+        },
+        {
+          "stratum": "tool-reasoning",
+          "n": 100,
+          "accA": 0.65,
+          "accB": 0.75
+        }
+      ],
+      "sample": [
+        {
+          "id": "item-000",
+          "stratum": "multi-step-reasoning",
+          "a": 1,
+          "b": 1
+        },
+        {
+          "id": "item-001",
+          "stratum": "multi-step-reasoning",
+          "a": 1,
+          "b": 1
+        },
+        {
+          "id": "item-002",
+          "stratum": "multi-step-reasoning",
+          "a": 1,
+          "b": 1
+        },
+        {
+          "id": "item-003",
+          "stratum": "multi-step-reasoning",
+          "a": 0,
+          "b": 1
+        },
+        {
+          "id": "item-004",
+          "stratum": "multi-step-reasoning",
+          "a": 0,
+          "b": 0
+        }
+      ],
+      "coverage": 400,
+      "pairedCounts": {
+        "bothCorrect": 184,
+        "bothWrong": 53,
+        "aOnly": 57,
+        "bOnly": 106
+      },
+      "parserFailures": 0,
+      "retry": {
+        "retried": 381,
+        "recovered": 112
+      },
+      "tool": {
+        "needed": 119,
+        "penalized": 0
+      },
+      "evidenceHash": "bde0c006cbbbcaac10d6d386ed32fd626bfec3afd862933ce4a477f3dbfd7f18"
+    },
+    "candidate": [
+      "reasoning_budget"
+    ],
+    "verification": {
+      "status": "VERIFIED",
+      "minimumCardinality": 1,
+      "minimumWitnesses": [
+        [
+          "reasoning_budget"
+        ]
+      ],
+      "coMinimumWitnesses": [
+        [
+          "reasoning_budget"
+        ]
+      ],
+      "checkedCount": 17,
+      "totalSubsets": 16,
+      "exhaustive": true,
+      "target": "MODEL_B"
+    },
+    "certificate": {
+      "certificateId": "mpw-529058561ce16295",
+      "certificateHash": "529058561ce162957560838a202a991b724d57b00e9081abfe0c573a438c52db",
+      "status": "VERIFIED",
+      "minimumCardinality": 1,
+      "valid": true
+    },
+    "activity": [
+      {
+        "seq": 1,
+        "source": "HUMAN",
+        "op": "READ_DISPUTE",
+        "detail": "dispute loaded (MODEL_A,MODEL_B)"
+      },
+      {
+        "seq": 2,
+        "source": "HUMAN",
+        "op": "RUN_COUNTERFACTUAL",
+        "detail": "A:[\"answer_parser\"] -> MODEL_A (e30bf560e5ba)"
+      },
+      {
+        "seq": 3,
+        "source": "HUMAN",
+        "op": "INSPECT_EVIDENCE",
+        "detail": "e30bf560e5ba -> MODEL_A"
+      },
+      {
+        "seq": 4,
+        "source": "HUMAN",
+        "op": "RUN_COUNTERFACTUAL",
+        "detail": "A:[\"reasoning_budget\"] -> MODEL_B (011df65a8136)"
+      },
+      {
+        "seq": 5,
+        "source": "HUMAN",
+        "op": "INSPECT_EVIDENCE",
+        "detail": "011df65a8136 -> MODEL_B"
+      },
+      {
+        "seq": 6,
+        "source": "HUMAN",
+        "op": "VERIFY_WITNESS",
+        "detail": "[\"reasoning_budget\"] -> VERIFIED"
+      },
+      {
+        "seq": 7,
+        "source": "SYSTEM",
+        "op": "VERIFY_WITNESS",
+        "detail": "certificate mpw-529058561ce16295 issued"
+      }
+    ],
+    "status": "witness verified",
+    "error": null
+  }
+}

@@ -11,7 +11,7 @@ import {
 import { buildCertificate, verifyCertificate, LIMITATIONS } from "../engine/mpwCertificate";
 import { registerWebMcpTools } from "../webmcp/tools";
 import { useSelection } from "../state/useSelection";
-import { experimentVerdict, subsetsLine } from "./verdict";
+import { experimentVerdict, subsetsLine, categoryInsight } from "./verdict";
 import JsonBlock from "../components/JsonBlock";
 
 const DIM_LABEL: Record<string, string> = {
@@ -21,12 +21,14 @@ const DIM_LABEL: Record<string, string> = {
   tool_access: "Tool access",
 };
 
-const tag = (source: string) => {
-  const bg = source === "AGENT" ? "#e8def8" : source === "SYSTEM" ? "#e2e3e5" : "#cfe2ff";
+function SourceTag({ source }: { source: string }) {
+  const cls = source === "AGENT" ? "mpw-tag mpw-tag-a" : source === "SYSTEM" ? "mpw-tag mpw-tag-s" : "mpw-tag mpw-tag-h";
   return (
-    <span style={{ background: bg, padding: "0 6px", borderRadius: 4, fontSize: 12 }}>{source}</span>
+    <span className={cls} aria-label={`event source ${source}`}>
+      ◆ {source}
+    </span>
   );
-};
+}
 
 export default function App() {
   const inv = useSyncExternalStore(subscribeInvestigation, getInvestigationState);
@@ -60,6 +62,13 @@ export default function App() {
   const verifyAsk = [...(inv.activity ?? [])]
     .reverse()
     .find((e) => e.op === "VERIFY_WITNESS" && e.source !== "SYSTEM")?.source;
+  const insight =
+    inv.evidenceView !== null
+      ? categoryInsight(
+          inv.evidenceView.categorySummary,
+          inv.evidenceView.categorySummary.reduce((s, c) => s + ((c.accA - c.accB) * c.n) / 400, 0)
+        )
+      : null;
 
   const downloadCertificate = () => {
     try {
@@ -97,81 +106,92 @@ export default function App() {
   };
 
   return (
-    <main style={{ fontFamily: "system-ui, sans-serif", maxWidth: 900, margin: "2rem auto", padding: "0 1rem" }}>
+    <main className="mpw">
+      <a className="mpw-skip" href="#investigation">
+        Skip to investigation
+      </a>
       <h1>Minimal Protocol Witness</h1>
-      <p>
-        <strong>SAME BENCHMARK.</strong> <strong>SAME TWO MODELS.</strong>{" "}
-        <strong>OPPOSITE ESTABLISHED CONCLUSIONS.</strong>
-      </p>
-      <p>
-        <strong>Synthetic evaluation reports, not real model measurements.</strong> Every number below is
-        recomputed by the deterministic engine when you act.
-      </p>
-      <p>{note}</p>
-      <p>
-        status: {inv.status}
+      <section className="mpw-banner" aria-label="The contradiction">
+        <p>
+          <strong>SAME BENCHMARK.</strong> <strong>SAME TWO MODELS.</strong>{" "}
+          <strong>OPPOSITE ESTABLISHED CONCLUSIONS.</strong>
+        </p>
+        <p className="mpw-muted">
+          Synthetic evaluation reports, not real model measurements. Every number below is recomputed by the
+          deterministic engine when you act.
+        </p>
+      </section>
+      <p role="status">{note}</p>
+      <p role="status" aria-live="polite">
+        status: {busy !== null ? <span className="mpw-busy">{inv.status}…</span> : inv.status}
         {inv.error !== null ? ` · error: ${inv.error}` : ""}
       </p>
 
       {inv.dispute !== null && labA !== null && labB !== null && (
         <>
-          <div style={{ display: "flex", gap: "1rem" }}>
+          <div className="mpw-grid">
             {[
-              { title: "LAB A", s: labA },
-              { title: "LAB B", s: labB },
-            ].map(({ title, s }) => (
-              <section key={title} style={{ flex: 1, border: "1px solid #ccc", padding: "0.5rem 1rem" }}>
+              { title: "LAB A", s: labA, cls: "mpw-card mpw-labA" },
+              { title: "LAB B", s: labB, cls: "mpw-card mpw-labB" },
+            ].map(({ title, s, cls }) => (
+              <section key={title} className={cls} aria-label={`${title} result`}>
                 <h2>{title}</h2>
-                <p>
+                <p className="mpw-scores">
                   MODEL_A {s.scoreA} / MODEL_B {s.scoreB}
                 </p>
-                <p>
+                <p className="mpw-scores">
                   delta {s.delta} · CI [{s.ciLow}, {s.ciHigh}]
                 </p>
-                <p>
-                  <strong>{s.conclusion}</strong> · coverage {s.coverage}
+                <p className="mpw-conclusion">
+                  {s.conclusion === "MODEL_A" ? "■ " : "□ "}<strong>{s.conclusion}</strong> · coverage {s.coverage}
                 </p>
               </section>
             ))}
           </div>
-          <h2>protocol differences</h2>
-          <ul>
-            {(inv.differences ?? []).map((d) => (
-              <li key={d}>
-                {DIM_LABEL[d] ?? d}: {String((inv.dispute?.labA as Record<string, unknown>)[d])} ↔{" "}
-                {String((inv.dispute?.labB as Record<string, unknown>)[d])}
-              </li>
-            ))}
-          </ul>
+          <section className="mpw-card" aria-label="Protocol differences">
+            <h2>protocol differences</h2>
+            <ul>
+              {(inv.differences ?? []).map((d) => (
+                <li key={d}>
+                  {DIM_LABEL[d] ?? d}: {String((inv.dispute?.labA as Record<string, unknown>)[d])} ↔{" "}
+                  {String((inv.dispute?.labB as Record<string, unknown>)[d])}
+                </li>
+              ))}
+            </ul>
+          </section>
         </>
       )}
 
-      <h2>controlled test</h2>
-      <div>
-        {(inv.dispute?.exposedDimensions ?? []).map((dim) => (
-          <label key={dim} style={{ marginRight: "1rem" }}>
-            <input type="checkbox" checked={checked.includes(dim)} onChange={() => toggle(dim)} /> {dim}
-          </label>
-        ))}
-      </div>
-      <button disabled={busy !== null} onClick={() => run("counter", () => runCounterfactualOp("HUMAN", { adopt: checked }))}>
-        {busy === "counter" ? "running…" : "run counterfactual"}
-      </button>{" "}
-      <button
-        disabled={busy !== null || exp === null}
-        onClick={() => run("evidence", () => inspectEvidenceOp("HUMAN", { experimentId: exp?.experimentId, limit: 5 }))}
-      >
-        {busy === "evidence" ? "running…" : "inspect evidence"}
-      </button>{" "}
-      <button disabled={busy !== null} onClick={() => run("witness", () => verifyWitnessOp("HUMAN", { candidate: checked }))}>
-        {busy === "witness" ? "running…" : "verify candidate"}
-      </button>{" "}
-      <button disabled={busy !== null} onClick={() => run("reset", () => resetInvestigation("HUMAN"))}>
-        {busy === "reset" ? "resetting…" : "reset"}
-      </button>
+      <section id="investigation" aria-label="Investigation controls">
+        <h2>controlled test</h2>
+        <div role="group" aria-label="Dimensions to adopt from Lab B">
+          {(inv.dispute?.exposedDimensions ?? []).map((dim) => (
+            <label key={dim} style={{ marginRight: "1rem" }}>
+              <input type="checkbox" checked={checked.includes(dim)} onChange={() => toggle(dim)} /> {dim}
+            </label>
+          ))}
+        </div>
+        <p>
+          <button disabled={busy !== null} onClick={() => run("counter", () => runCounterfactualOp("HUMAN", { adopt: checked }))}>
+            {busy === "counter" ? "running…" : "run counterfactual"}
+          </button>{" "}
+          <button
+            disabled={busy !== null || exp === null}
+            onClick={() => run("evidence", () => inspectEvidenceOp("HUMAN", { experimentId: exp?.experimentId, limit: 5 }))}
+          >
+            {busy === "evidence" ? "running…" : "inspect evidence"}
+          </button>{" "}
+          <button disabled={busy !== null} onClick={() => run("witness", () => verifyWitnessOp("HUMAN", { candidate: checked }))}>
+            {busy === "witness" ? "running…" : "verify candidate"}
+          </button>{" "}
+          <button disabled={busy !== null} onClick={() => run("reset", () => resetInvestigation("HUMAN"))}>
+            {busy === "reset" ? "resetting…" : "reset"}
+          </button>
+        </p>
+      </section>
 
       {exp !== null && (
-        <section style={{ border: "1px solid #ccc", padding: "0.5rem 1rem", marginTop: "1rem" }}>
+        <section className="mpw-card mpw-flash" aria-label="Current controlled test" aria-live="polite">
           <h3>CONTROLLED TEST</h3>
           {exp.subset.length === 0 ? (
             <p>Baseline: no changes applied.</p>
@@ -186,18 +206,20 @@ export default function App() {
             </ul>
           )}
           <p>Everything else held constant.</p>
-          <p>
+          <p className="mpw-scores">
             MODEL_A {exp.accA} / MODEL_B {exp.accB} · delta {exp.mean} · CI [{exp.ciLow}, {exp.ciHigh}] ·{" "}
             <strong>{exp.conclusion}</strong> · coverage {exp.coverage}
           </p>
-          <p>
-            <strong>{experimentVerdict(exp)}</strong>
+          <p className={exp.reproducesTarget ? "mpw-verdict-yes" : "mpw-verdict-no"}>
+            {exp.reproducesTarget ? "● " : "◐ "}
+            {experimentVerdict(exp)}
           </p>
+          {insight !== null && <p className="mpw-muted">{insight}</p>}
         </section>
       )}
 
       {inv.evidenceView !== null && (
-        <section>
+        <section className="mpw-card" aria-label="Evidence diagnostics">
           <h3>evidence diagnostics</h3>
           <JsonBlock
             value={{
@@ -213,30 +235,33 @@ export default function App() {
       )}
 
       {inv.verification !== null && (
-        <section>
+        <section className="mpw-card mpw-flash" aria-label="Verification" aria-live="polite">
           <h3>verification</h3>
-          <p>
-            {subsetsLine({ subsetsTotal: inv.verification.totalSubsets })}
-            {inv.verification.status === "VERIFIED" ? ` (+${inv.verification.checkedCount - inv.verification.totalSubsets} candidate check)` : ""}
-          </p>
+          <div className="mpw-subsets" aria-hidden="true">
+            {Array.from({ length: inv.verification.totalSubsets }, (_, i) => (
+              <span key={i} />
+            ))}
+          </div>
+          <p>{subsetsLine({ subsetsTotal: inv.verification.totalSubsets })}</p>
           <p>
             status <strong>{inv.verification.status}</strong> · minimum cardinality{" "}
             {String(inv.verification.minimumCardinality)} · witness(es){" "}
             {inv.verification.coMinimumWitnesses.map((w) => w.join("+") || "∅").join(", ")}
           </p>
           <p>
-            requested by {tag(verifyAsk ?? "HUMAN")} · exhaustively verified by {tag("SYSTEM")}
+            requested by <SourceTag source={verifyAsk ?? "HUMAN"} /> · exhaustively verified by{" "}
+            <SourceTag source="SYSTEM" />
           </p>
         </section>
       )}
 
       {inv.certificate !== null && (
-        <section style={{ border: "1px solid #ccc", padding: "0.5rem 1rem", marginTop: "1rem" }}>
+        <section className="mpw-cert mpw-flash" aria-label="Certificate">
           <h3>certificate</h3>
           <p>
             id <strong>{inv.certificate.certificateId}</strong>
           </p>
-          <p>content hash {inv.certificate.certificateHash}</p>
+          <p className="mpw-scores">content hash {inv.certificate.certificateHash}</p>
           <p>
             status {inv.certificate.status} · valid {String(inv.certificate.valid)}
           </p>
@@ -251,27 +276,31 @@ export default function App() {
           <button disabled={busy !== null} onClick={() => run("download", downloadCertificate)}>
             download JSON
           </button>
-          {certMsg !== null && <p>{certMsg}</p>}
+          {certMsg !== null && <p role="status">{certMsg}</p>}
         </section>
       )}
 
-      <h2>investigation trace</h2>
-      <ul>
-        {inv.experiments.map((e) => (
-          <li key={e.experimentId}>
-            {e.subset.join("+") || "baseline"} → <strong>{e.conclusion}</strong>
-            {e.experimentId === exp?.experimentId ? " (selected)" : ""}
-          </li>
-        ))}
-      </ul>
-      <h2>activity</h2>
-      <ul>
-        {inv.activity.map((e) => (
-          <li key={e.seq}>
-            #{e.seq} {tag(e.source)} {e.op} — {e.detail}
-          </li>
-        ))}
-      </ul>
+      <section aria-label="Experiment trace">
+        <h2>investigation trace</h2>
+        <ul>
+          {inv.experiments.map((e) => (
+            <li key={e.experimentId}>
+              {e.subset.join("+") || "baseline"} → <strong>{e.conclusion}</strong>
+              {e.experimentId === exp?.experimentId ? " (selected)" : ""}
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section aria-label="Activity">
+        <h2>activity</h2>
+        <ul>
+          {inv.activity.map((e) => (
+            <li key={e.seq}>
+              #{e.seq} <SourceTag source={e.source} /> {e.op} — {e.detail}
+            </li>
+          ))}
+        </ul>
+      </section>
     </main>
   );
 }
