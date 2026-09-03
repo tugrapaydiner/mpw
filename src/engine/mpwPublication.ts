@@ -274,6 +274,22 @@ export function verifyFinalizedBundle(bundle: unknown): { status: "VALID"; publi
     bundleFail(checks, "evaluator version mismatch");
   }
   const protocol = core.protocol as Record<string, JsonValue>;
+  const protoKeys = Object.keys(protocol).sort();
+  if (JSON.stringify(protoKeys) !== JSON.stringify([...EXPOSED_DIMENSIONS].sort())) {
+    checks.push({ check: "core.protocol.keys", pass: false, detail: `got [${protoKeys}]` });
+    bundleFail(checks, "protocol shape mismatch (hidden dimension?)");
+  }
+  if (
+    typeof protocol.reasoning_budget !== "number" ||
+    !Number.isFinite(protocol.reasoning_budget) ||
+    (protocol.answer_parser !== "tolerant" && protocol.answer_parser !== "strict") ||
+    (protocol.retry_policy !== "one-retry" && protocol.retry_policy !== "no-retry") ||
+    (protocol.tool_access !== "standard" && protocol.tool_access !== "restricted")
+  ) {
+    checks.push({ check: "core.protocol.values", pass: false, detail: "invalid protocol values" });
+    bundleFail(checks, "invalid protocol values");
+  }
+  checks.push({ check: "core.protocol.shape", pass: true, detail: "exactly the four exposed dims" });
   const hashes = exactKeys(top.hashes, ["protocolHash", "benchmarkHash", "evidenceHash", "manifestBodyHash"], "hashes", checks);
   const evidence = exactKeys(top.evidence, ["receiptCount", "itemCoverage", "evidenceHash"], "evidence", checks);
 

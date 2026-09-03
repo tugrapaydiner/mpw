@@ -338,6 +338,13 @@ export function verifyCertificate(wrapper: unknown): { status: "VALID"; certific
   for (const side of ["sourceA", "sourceB"] as const) {
     const s = body[side] as Record<string, unknown>;
     need(`${side}.publication`, typeof s?.publicationId === "string" && typeof s?.publicationHash === "string", side);
+    const proto = s?.protocol as Record<string, unknown>;
+    need(
+      `${side}.protocol.keys`,
+      typeof proto === "object" && proto !== null &&
+        JSON.stringify(Object.keys(proto).sort()) === JSON.stringify([...EXPOSED_DIMENSIONS].sort()),
+      "protocol must be exactly the four exposed dims"
+    );
     need(`${side}.conclusion`, CONCLUSIONS.includes(s?.conclusion as Conclusion), String(s?.conclusion));
     for (const k of ["scoreA", "scoreB", "delta", "ciLow", "ciHigh", "coverage"]) {
       need(`${side}.${k}`, typeof s?.[k] === "number" && Number.isFinite(s[k] as number), String(s?.[k]));
