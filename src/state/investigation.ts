@@ -116,6 +116,16 @@ function fail(s: InvestigationState, source: EventSource, op: Op, message: strin
   return { ok: false as const, code, error: tagged };
 }
 
+function checkArgs(args: unknown, allowed: string[], op: string): Record<string, unknown> {
+  if (typeof args !== "object" || args === null || Array.isArray(args)) {
+    throw new Error(`INVALID_CANDIDATE: ${op} args must be an object`);
+  }
+  for (const k of Object.keys(args)) {
+    if (!allowed.includes(k)) throw new Error(`INVALID_CANDIDATE: unexpected prop ${k} for ${op}`);
+  }
+  return args as Record<string, unknown>;
+}
+
 function checkDisputeId(disputeId: unknown): void {
   if (disputeId === undefined) return;
   if (disputeId !== canonicalDisputeId()) {
@@ -142,9 +152,10 @@ export function runCounterfactualOp(
   args: { disputeId?: unknown; baseLab?: unknown; adopt?: unknown }
 ): { ok: true; result: ReturnType<typeof runCounterfactual>; repeated: boolean } | { ok: false; code: ErrorCode; error: string } {
   try {
-    checkDisputeId(args?.disputeId);
-    const base = args?.baseLab ?? "A";
-    const adopt = args?.adopt ?? [];
+    const a = checkArgs(args, ["disputeId", "baseLab", "adopt"], "RUN_COUNTERFACTUAL");
+    checkDisputeId(a.disputeId);
+    const base = a.baseLab ?? "A";
+    const adopt = a.adopt ?? [];
     const key = `${String(base)}:${JSON.stringify([...(adopt as string[])].sort())}`;
     const prior = state.experiments.find((x) => `${x.baseLab}:${JSON.stringify([...x.subset].sort())}` === key);
     if (prior) {
@@ -179,13 +190,14 @@ export function inspectEvidenceOp(
   args: { experimentId?: unknown; category?: unknown; limit?: unknown }
 ): { ok: true; result: ReturnType<typeof inspectEvidence> } | { ok: false; code: ErrorCode; error: string } {
   try {
-    const id = args?.experimentId;
+    const a = checkArgs(args, ["experimentId", "category", "limit"], "INSPECT_EVIDENCE");
+    const id = a.experimentId;
     if (typeof id !== "string" || !registry.has(id)) {
       throw new Error(`UNKNOWN_EXPERIMENT: no such experiment ${String(id)}. run it first with run_counterfactual.`);
     }
     const req = registry.get(id)!;
-    const category = (args?.category as string | undefined) ?? null;
-    const limit = (args?.limit as number | undefined) ?? 5;
+    const category = (a.category as string | undefined) ?? null;
+    const limit = (a.limit as number | undefined) ?? 5;
     const result = inspectEvidence(req.subset, req.baseLab, { stratum: category, limit });
     if (result.coverage < NUM_ITEMS) throw new Error("EVIDENCE_INCOMPLETE: coverage below expected items");
     const next = log(state, caller, "INSPECT_EVIDENCE", `${id.slice(0, 12)} -> ${result.conclusion}`);
@@ -201,9 +213,10 @@ export function verifyWitnessOp(
   args: { disputeId?: unknown; baseLab?: unknown; candidate?: unknown }
 ): { ok: true; result: ReturnType<typeof witness> & { certificate: { id: string; hash: string } | null; limitation: string } } | { ok: false; code: ErrorCode; error: string } {
   try {
-    checkDisputeId(args?.disputeId);
-    const base = args?.baseLab ?? "A";
-    const candidate = args?.candidate;
+    const a = checkArgs(args, ["disputeId", "baseLab", "candidate"], "VERIFY_WITNESS");
+    checkDisputeId(a.disputeId);
+    const base = a.baseLab ?? "A";
+    const candidate = a.candidate;
     if (!Array.isArray(candidate)) throw new Error("INVALID_CANDIDATE: candidate must be an array");
     const sorted = [...candidate].sort();
     const raw = witness(candidate, base);

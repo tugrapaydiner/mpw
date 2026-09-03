@@ -49,6 +49,7 @@ export interface ItemAttrs {
 
 export function itemAttrs(item: BenchmarkItem, seed: string = SIM_SEED): ItemAttrs {
   const t = STRATUM_TEMPLATE[item.stratum];
+  if (!t) throw new Error(`unknown stratum: ${String(item.stratum)}`);
   const j = (k: string, w: number): number => (u01(seed, "attr", item.id, k) - 0.5) * w;
   return {
     difficulty: clamp01(t.diff + j("diff", 0.2)),
