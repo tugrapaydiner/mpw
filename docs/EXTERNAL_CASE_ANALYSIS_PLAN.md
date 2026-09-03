@@ -1,10 +1,12 @@
 # External Case Analysis Plan — Fragility Grid
 
-**Plan version:** 1  
+**Plan version:** 1.1  
 **Upstream repository:** `NikolaTesla-007/fragility-grid`  
 **Pinned upstream commit:** `3f51444ead009d8351de1b6b19bf901c4da3d420`  
 **Upstream paper:** *There Is No Neutral Harness: Modern LLM Leaderboards Are Manufactured by Config-Fragile Items*  
-**Status:** design frozen before running MPW's item-level discovery/validation split.
+**Status:** revision 1.1 frozen before the first item-level study execution.
+
+**Revision 1.1 clarification:** endpoint configurations are directional. Every eligible ordered `(base, target)` pair is enumerated, so a witness that exists only in one reconciliation direction is not silently missed. The portable derived package retains the complete eligible correctness-bit matrix in compact form so selection and validation can be replayed offline; it still excludes all question, answer, and gold-label text.
 
 ## Purpose
 
@@ -36,7 +38,7 @@ Eligible protocol coordinates:
 1. `format` — `letter_plain`, `letter_paren`, `digit_labels`, or `instruction`;
 2. `permutation` — `p0` through `p5`.
 
-A candidate dispute consists of an unordered model pair and two endpoint configurations that differ in both coordinates. Its four controlled worlds are therefore all present in the released grid:
+A candidate dispute consists of an unordered model pair and an **ordered** `(base, target)` pair of endpoint configurations that differ in both coordinates. Both directions of every eligible endpoint diagonal are enumerated. Its four controlled worlds are therefore all present in the released grid:
 
 - base `(format_A, permutation_A)`;
 - format-only substitution `(format_B, permutation_A)`;
@@ -55,7 +57,7 @@ Sort items in ascending digest order. The first `floor(n/2)` items in each bench
 
 ## Discovery search
 
-Enumerate every unordered model pair and every eligible pair of endpoint configurations. For model order `(model_a, model_b)`, define
+Enumerate every unordered model pair and every eligible ordered `(base, target)` pair of endpoint configurations. For model order `(model_a, model_b)`, define
 
 `delta = accuracy(model_a) - accuracy(model_b)`.
 
