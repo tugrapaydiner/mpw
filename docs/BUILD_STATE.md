@@ -13,5 +13,5 @@ domain: exact vocabulary in `src/types/domain.ts`, strict validators in `src/eng
 fixtures: 12,800 receipts regenerable, cores in `data/generated/`, `npm run fixtures` to rebuild.
 smoke: proven live (10 invocations, chrome inspector path). compat PASS recorded.
 deploy: dist ready. pages workflow present.
-head: b5d339657f445116956a84f3c4e6d2a848332160
+head: d785e200caba40f847719e40856289a31175e9fc
 open: demo video, submit, freeze.
