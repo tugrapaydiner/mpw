@@ -14,5 +14,6 @@
 - D012 certificate hash excludes wall-clock generation time. ui meta stays outside.
 - D013 no public AI-generated project name. display name PROJECT_NAME_UNSET.
 - D014 source reports must pass self-integrity before reconciliation. else SOURCE_INTEGRITY_FAILURE.
+- D015 verified registration pattern: top-level module code feature-detects `document.modelContext?.registerTool`, registers `{name, description, inputSchema, annotations, execute}` once under a module guard, remount-safe. proven live 2026-09-03.
 
 older notes: vanilla-first then react move (same seeds); local sha256 for browser hashing; ts5 for linter compat; relative vite base for pages subpath; tunnel for manual test, pages for permanent url; order-agnostic trace grading.

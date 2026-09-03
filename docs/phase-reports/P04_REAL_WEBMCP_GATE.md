@@ -1,5 +1,6 @@
-# P04 real webmcp gate — MANUAL RETEST REQUIRED
+# P04 real webmcp gate — PASS
 
-attempt 1 (pages build): agent declined, "requires browser/Work access, handoff declined". no invocation, no counter change. not a code verdict — surface not proven.
-discriminator: was "Site tools" visible in the desktop browser address bar with the page open? if no, the page wasn't in the built-in browser surface.
-root-cause class pending that answer: wrong-surface vs access-gating.
+environment: chrome with webmcp testing flag + inspector extension, public pages build. (desktop Work/Codex path unavailable: no credits. chrome path permitted by rules.)
+evidence: compat panel Supported, 10 invocations of reconciler_smoke_test with "webmcp verified", counter 0→10, activity log full, exact args echoed back each call.
+verdict: tool discovered, invoked for real, correct args reached execute, visible state changed, results returned. gate is real.
+attempt 1 note: chat-surface decline logged earlier was wrong-surface, not a code fail.
