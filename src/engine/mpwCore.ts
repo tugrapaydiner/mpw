@@ -202,50 +202,193 @@ export function stratifiedPairedBootstrap(
   outcomes: Outcome[],
   { seed = BOOT_SEED, replicates = BOOT_REPLICATES }: { seed?: string; replicates?: number } = {}
 ) {
-  if (!Array.isArray(outcomes) || outcomes.length === 0)
-    throw new Error("outcomes must be a non-empty array");
-  if (typeof seed !== "string" || seed.length === 0) throw new Error("seed must be set");
-  if (!Number.isInteger(replicates) || replicates < 1000)
-    throw new Error("replicates must be an integer >= 1000");
+  const a = analyzeEvidence(outcomes, { seed, replicates });
+  return { n: a.n, mean: a.delta, ciLow: a.ciLow, ciHigh: a.ciHigh, replicates: a.replicates, seed: a.seed, method: "stratified-paired-bootstrap" };
+}
+
+// CI-only rule on Delta = A - B. never uses the point estimate.
+export function classifyBootstrap({ ciLow, ciHigh }: { ciLow: number; ciHigh: number }): {
+  conclusion: "MODEL_A" | "MODEL_B" | "INCONCLUSIVE";
+  reason: string;
+} {
+  if (!isFiniteNumber(ciLow) || !isFiniteNumber(ciHigh)) throw new Error("CI bounds must be finite");
+  if (ciLow > 0) return { conclusion: "MODEL_A", reason: "CI above 0" };
+  if (ciHigh < 0) return { conclusion: "MODEL_B", reason: "CI below 0" };
+  return { conclusion: "INCONCLUSIVE", reason: "CI covers 0" };
+}
+
+// algorithm identity for certificates and reports.
+export const BOOT_ALGO_ID = "mpw-stratified-paired-bootstrap";
+export const BOOT_ALGO_VERSION = 1;
+export const BOOT_CONFIDENCE = 0.95;
+
+// empirical quantile on sorted ascending values. rank rule: low index
+// floor(0.025*N), high index ceil(0.975*N)-1. deterministic by construction.
+export function percentile(sorted: number[], q: number): number {
+  if (!Array.isArray(sorted) || sorted.length === 0) throw new Error("sorted must be a non-empty array");
+  if (!(q === 0.025 || q === 0.975)) throw new Error("only 0.025/0.975 supported");
+  for (const v of sorted) if (!isFiniteNumber(v)) throw new Error("values must be finite");
+  const n = sorted.length;
+  const idx = q === 0.025 ? Math.floor(0.025 * n) : Math.ceil(0.975 * n) - 1;
+  return sorted[idx];
+}
+
+export interface ModelReceipt {
+  id: string;
+  stratum: string;
+  correct: 0 | 1;
+}
+
+// pairs per-model receipts by exact item id. rejects everything mismatched.
+export function pairModelReceipts(aList: ModelReceipt[], bList: ModelReceipt[]): Outcome[] {
+  if (!Array.isArray(aList) || !Array.isArray(bList)) throw new Error("receipt lists must be arrays");
+  const ids = new Set<string>();
+  for (const r of [...aList, ...bList]) {
+    if (!r || typeof r.id !== "string" || r.id.length === 0) throw new Error("missing receipt id");
+    if (r.correct !== 0 && r.correct !== 1) throw new Error(`missing model receipt for ${r.id}`);
+    if (typeof r.stratum !== "string" || !r.stratum) throw new Error(`missing stratum for ${r.id}`);
+  }
+  const bById = new Map<string, ModelReceipt>();
+  for (const r of bList) {
+    if (bById.has(r.id)) throw new Error(`duplicate pair for ${r.id}`);
+    bById.set(r.id, r);
+  }
+  const out: Outcome[] = [];
+  const seen = new Set<string>();
+  for (const ra of aList) {
+    if (seen.has(ra.id)) throw new Error(`duplicate pair for ${ra.id}`);
+    seen.add(ra.id);
+    const rb = bById.get(ra.id);
+    if (!rb) throw new Error(`unmatched item ${ra.id}`);
+    ids.add(ra.id);
+    out.push({ id: ra.id, stratum: ra.stratum, a: ra.correct, b: rb.correct, diff: ra.correct - rb.correct });
+  }
+  if (bById.size !== aList.length) throw new Error("unmatched items on B side");
+  void ids;
+  return out.sort((x, y) => x.id.localeCompare(y.id));
+}
+
+// one stratified resample: per group, sample len(group) with replacement,
+// carrying each paired outcome together. preserves sizes and pairing.
+export function stratifiedResample<T>(groups: T[][], rand: () => number): T[][] {
+  return groups.map((g) => {
+    const m = g.length;
+    if (m === 0) throw new Error("empty stratum");
+    const s: T[] = [];
+    for (let k = 0; k < m; k++) s.push(g[Math.floor(rand() * m)]);
+    return s;
+  });
+}
+
+export interface EvidenceAnalysis {
+  n: number;
+  scoreA: number;
+  scoreB: number;
+  delta: number;
+  ciLow: number;
+  ciHigh: number;
+  bothCorrect: number;
+  bothWrong: number;
+  aOnly: number;
+  bOnly: number;
+  categories: Array<{ stratum: string; n: number; scoreA: number; scoreB: number; delta: number }>;
+  conclusion: "MODEL_A" | "MODEL_B" | "INCONCLUSIVE";
+  algorithm: string;
+  algorithmVersion: number;
+  seed: string;
+  replicates: number;
+  confidence: number;
+}
+
+// full evidence analysis. full precision throughout, no rounding here.
+export function analyzeEvidence(
+  outcomes: Outcome[],
+  { seed = BOOT_SEED, replicates = BOOT_REPLICATES }: { seed?: string; replicates?: number } = {}
+): EvidenceAnalysis {
+  if (!Array.isArray(outcomes) || outcomes.length === 0) throw new Error("zero items rejected");
   const groups = new Map<string, Outcome[]>();
   for (const o of outcomes) {
     if (!o || (o.a !== 0 && o.a !== 1) || (o.b !== 0 && o.b !== 1))
       throw new Error("each outcome needs binary a/b");
     if (typeof o.stratum !== "string" || !o.stratum) throw new Error("each outcome needs a stratum");
+    if (typeof o.id !== "string" || !o.id) throw new Error("each outcome needs an id");
     if (!groups.has(o.stratum)) groups.set(o.stratum, []);
     groups.get(o.stratum)!.push(o);
   }
   const keys = [...groups.keys()].sort();
   const lists = keys.map((k) => [...groups.get(k)!].sort((x, y) => x.id.localeCompare(y.id)));
   const n = outcomes.length;
-  let sum = 0;
-  for (const o of outcomes) sum += o.a - o.b;
-  const mean = sum / n;
+  let sA = 0;
+  let sB = 0;
+  let bothCorrect = 0;
+  let bothWrong = 0;
+  let aOnly = 0;
+  let bOnly = 0;
+  for (const o of outcomes) {
+    sA += o.a;
+    sB += o.b;
+    if (o.a === 1 && o.b === 1) bothCorrect++;
+    else if (o.a === 0 && o.b === 0) bothWrong++;
+    else if (o.a === 1) aOnly++;
+    else bOnly++;
+  }
+  const categories = keys.map((k, i) => {
+    const g = lists[i];
+    let ca = 0;
+    let cb = 0;
+    for (const o of g) {
+      ca += o.a;
+      cb += o.b;
+    }
+    return { stratum: k, n: g.length, scoreA: ca / g.length, scoreB: cb / g.length, delta: (ca - cb) / g.length };
+  });
   const means = new Array<number>(replicates);
   for (let r = 0; r < replicates; r++) {
     const rand = mulberry32(hashSeedString(`${seed}|${r}`));
+    const sampled = stratifiedResample(lists, rand);
     let s = 0;
-    for (const g of lists) {
-      const m = g.length;
-      for (let k = 0; k < m; k++) {
-        const o = g[Math.floor(rand() * m)];
-        s += o.a - o.b;
-      }
-    }
+    for (const g of sampled) for (const o of g) s += o.a - o.b;
     means[r] = s / n;
   }
   means.sort((x, y) => x - y);
-  const ciLow = means[Math.floor(0.025 * replicates)];
-  const ciHigh = means[Math.ceil(0.975 * replicates) - 1];
-  return { n, mean, ciLow, ciHigh, replicates, seed, method: "stratified-paired-bootstrap" };
+  const ciLow = percentile(means, 0.025);
+  const ciHigh = percentile(means, 0.975);
+  const { conclusion } = classifyBootstrap({ ciLow, ciHigh });
+  return {
+    n,
+    scoreA: sA / n,
+    scoreB: sB / n,
+    delta: (sA - sB) / n,
+    ciLow,
+    ciHigh,
+    bothCorrect,
+    bothWrong,
+    aOnly,
+    bOnly,
+    categories,
+    conclusion,
+    algorithm: BOOT_ALGO_ID,
+    algorithmVersion: BOOT_ALGO_VERSION,
+    seed,
+    replicates,
+    confidence: BOOT_CONFIDENCE,
+  };
 }
 
-// CI-only rule on Delta = A - B. never uses the point estimate.
-export function classifyBootstrap({ ciLow, ciHigh }: { ciLow: number; ciHigh: number }) {
-  if (!isFiniteNumber(ciLow) || !isFiniteNumber(ciHigh)) throw new Error("CI bounds must be finite");
-  if (ciLow > 0) return { conclusion: "MODEL_A", reason: "CI above 0" };
-  if (ciHigh < 0) return { conclusion: "MODEL_B", reason: "CI below 0" };
-  return { conclusion: "INCONCLUSIVE", reason: "CI covers 0" };
+// canonical benchmark gate: exactly 4 categories of exactly 100.
+export function analyzeCanonical(
+  outcomes: Outcome[],
+  opts?: { seed?: string; replicates?: number }
+): EvidenceAnalysis {
+  const groups = new Map<string, number>();
+  for (const o of outcomes ?? []) {
+    if (typeof o?.stratum !== "string" || !o.stratum) throw new Error("each outcome needs a stratum");
+    groups.set(o.stratum, (groups.get(o.stratum) ?? 0) + 1);
+  }
+  if (groups.size !== 4) throw new Error(`want 4 categories, got ${groups.size}`);
+  for (const [k, v] of groups) if (v !== 100) throw new Error(`wrong count for ${k}: want 100, got ${v}`);
+  if (outcomes.length !== 400) throw new Error(`want 400 items, got ${outcomes.length}`);
+  return analyzeEvidence(outcomes, opts);
 }
 
 // legacy normal-approx buckets, kept for unit checks only.
