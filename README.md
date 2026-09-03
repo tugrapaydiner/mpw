@@ -1,8 +1,8 @@
 # Minimal Protocol Witness
 
-Hey — I'm building this out step by step.
+answers one question: why do these two evaluation reports disagree?
 
-Right now it's just a clean starter so I have a good place to work from. I'll add to it in small commits as I figure out what I need.
+two labs test the same models on the same benchmark, get opposite established conclusions. human + agent share this live page — same engine underneath — and hunt the smallest protocol difference that flips the result. audience + non-goals in `docs/PRODUCT.md`.
 
 ## What I'm going for
 - Keep it minimal
