@@ -1,12 +1,12 @@
-# build state (updated 2026-09-03, P44)
+# build state (updated 2026-09-03, P45)
 
 WEBMCP_SMOKE_REAL=PASS
 PRODUCTION_WEBMCP_AUTOMATED=PASS
-NEXT=video+submit first, then BUILD candidate A only (B/C rejected)
+NEXT=video+submit first (phase map built, B/C rejected)
 stack: React 19 + TS 5.9 strict + Vite 8 + Vitest 4 + eslint.
 layout: src/{app,components,engine,state,types,webmcp}, data/{publications,fixtures}, scripts, tests/{engine,fixtures,webmcp}, docs/phase-reports.
 gates: `npm run verify` = typecheck + lint + tests + build. green required.
-tests: 192 passing, 30 files. seeds pinned (sim mpw-canonical-v1, boot mpw-boot-v1). red-team suite: 6 mutation tests.
+tests: 193 passing, 31 files. seeds pinned (sim mpw-canonical-v1, boot mpw-boot-v1). red-team suite: 6 mutation tests.
 tools: exactly read_dispute/run_counterfactual/inspect_evidence/verify_witness via document.modelContext.registerTool; smoke removed.
 services: src/state/investigation.ts wraps engine for HUMAN (ui) + AGENT (webmcp).
 provenance: JCS via canonicalize@4.0.0 + pre-validation gate + sha256 identity hashes (see docs/PROVENANCE_SPEC.md).

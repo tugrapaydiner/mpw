@@ -215,6 +215,22 @@ button:not(:disabled):active {
   display: inline-block;
 }
 
+.mpw-cell {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  margin: 0.25rem 0;
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.mpw-cell p {
+  margin: 0.2rem 0;
+}
+.mpw-cell-min {
+  border: 2px solid var(--ink);
+}
+
 .mpw-cert {
   border: 2px solid var(--ink);
   background: var(--card);

@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   getInvestigationState,
   subscribeInvestigation,
@@ -12,6 +12,7 @@ import { buildCertificate, verifyCertificate, LIMITATIONS } from "../engine/mpwC
 import { registerWebMcpTools } from "../webmcp/tools";
 import { useSelection } from "../state/useSelection";
 import { experimentVerdict, subsetsLine, categoryInsight } from "./verdict";
+import { buildPhaseCells } from "./phaseMap";
 import JsonBlock from "../components/JsonBlock";
 
 const DIM_LABEL: Record<string, string> = {
@@ -59,6 +60,7 @@ export default function App() {
   const labA = inv.dispute?.sources.find((s) => s.lab === "A") ?? null;
   const labB = inv.dispute?.sources.find((s) => s.lab === "B") ?? null;
   const exp = inv.selectedExperiment;
+  const phaseCells = useMemo(() => (inv.verification !== null ? buildPhaseCells() : null), [inv.verification]);
   const verifyAsk = [...(inv.activity ?? [])]
     .reverse()
     .find((e) => e.op === "VERIFY_WITNESS" && e.source !== "SYSTEM")?.source;
@@ -260,6 +262,39 @@ export default function App() {
             requested by <SourceTag source={verifyAsk ?? "HUMAN"} /> · exhaustively verified by{" "}
             <SourceTag source="SYSTEM" />
           </p>
+        </section>
+      )}
+
+      {phaseCells !== null && (
+        <section className="mpw-card" aria-label="Phase map: conclusion by protocol subset">
+          <h3>phase map</h3>
+          <p className="mpw-muted">
+            Apparent superiority depends on protocol regime. Every cell below is one freshly evaluated
+            protocol subset — discrete cells, no interpolation.
+          </p>
+          {[0, 1, 2, 3, 4].map((k) => (
+            <div key={k}>
+              <p className="mpw-muted">
+                {k} change{k === 1 ? "" : "s"}
+              </p>
+              <div className="mpw-grid">
+                {phaseCells
+                  .filter((c) => c.cardinality === k)
+                  .map((c) => (
+                    <div key={c.subset.join("+") || "base"} className={c.isMinimum ? "mpw-cell mpw-cell-min" : "mpw-cell"}>
+                      <p>
+                        <strong>{c.subset.join(" + ") || "baseline"}</strong>
+                      </p>
+                      <p>
+                        {c.conclusion === "MODEL_A" ? "■ " : c.conclusion === "MODEL_B" ? "□ " : "△ "}
+                        {c.conclusion}
+                      </p>
+                      {c.isMinimum && <p>minimum witness</p>}
+                    </div>
+                  ))}
+              </div>
+            </div>
+          ))}
         </section>
       )}
 
