@@ -110,7 +110,10 @@ export default function App() {
       <a className="mpw-skip" href="#investigation">
         Skip to investigation
       </a>
-      <h1>Minimal Protocol Witness</h1>
+      <header className="mpw-masthead">
+        <p className="mpw-overline">Deterministic evaluation record</p>
+        <h1>Minimal Protocol Witness</h1>
+      </header>
       <section className="mpw-banner" aria-label="The contradiction">
         <p>
           <strong>SAME BENCHMARK.</strong> <strong>SAME TWO MODELS.</strong>{" "}
@@ -149,7 +152,7 @@ export default function App() {
             ))}
           </div>
           <section className="mpw-card" aria-label="Protocol differences">
-            <h2>protocol differences</h2>
+            <h2 className="mpw-sec">protocol differences</h2>
             <ul>
               {(inv.differences ?? []).map((d) => (
                 <li key={d}>
@@ -163,7 +166,7 @@ export default function App() {
       )}
 
       <section id="investigation" aria-label="Investigation controls">
-        <h2>controlled test</h2>
+        <h2 className="mpw-sec">controlled test</h2>
         <div role="group" aria-label="Dimensions to adopt from Lab B">
           {(inv.dispute?.exposedDimensions ?? []).map((dim) => (
             <label key={dim} style={{ marginRight: "1rem" }}>
@@ -261,7 +264,7 @@ export default function App() {
           <p>
             id <strong>{inv.certificate.certificateId}</strong>
           </p>
-          <p className="mpw-scores">content hash {inv.certificate.certificateHash}</p>
+          <p className="mpw-scores mpw-hash">content hash {inv.certificate.certificateHash}</p>
           <p>
             status {inv.certificate.status} · valid {String(inv.certificate.valid)}
           </p>
@@ -281,8 +284,8 @@ export default function App() {
       )}
 
       <section aria-label="Experiment trace">
-        <h2>investigation trace</h2>
-        <ul>
+        <h2 className="mpw-sec">investigation trace</h2>
+        <ul className="mpw-trace">
           {inv.experiments.map((e) => (
             <li key={e.experimentId}>
               {e.subset.join("+") || "baseline"} → <strong>{e.conclusion}</strong>
@@ -292,8 +295,8 @@ export default function App() {
         </ul>
       </section>
       <section aria-label="Activity">
-        <h2>activity</h2>
-        <ul>
+        <h2 className="mpw-sec">activity</h2>
+        <ul className="mpw-trace">
           {inv.activity.map((e) => (
             <li key={e.seq}>
               #{e.seq} <SourceTag source={e.source} /> {e.op} — {e.detail}

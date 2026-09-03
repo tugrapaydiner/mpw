@@ -1,33 +1,39 @@
-/* premium scientific instrument. system fonts only, no imagery, no logos.
+/* scientific record aesthetic. system fonts only, no imagery, no logos.
    winners are never color-only: every state pairs shape + text. */
 :root {
-  --paper: #fbfbfa;
-  --ink: #1c1c1e;
-  --muted: #55565a;
-  --line: #d8d8dc;
-  --card: #ffffff;
-  --accent: #1e3a8a;
+  --paper: #f6f4ee;
+  --ink: #1b1712;
+  --muted: #5c564a;
+  --line: #ddd6c7;
+  --card: #fffefb;
+  --accent: #0f5257;
+  --accent-soft: #e3efef;
   --good-ink: #14532d;
-  --good-bg: #e3f2e7;
+  --good-bg: #e6f3e9;
   --warn-ink: #7c2d12;
-  --warn-bg: #fbeedd;
+  --warn-bg: #fbeedf;
   --tag-h: #dbe4ff;
   --tag-a: #e9defb;
   --tag-s: #e5e6ea;
   --focus: #b45309;
+  --serif: Georgia, "Times New Roman", serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
 }
 
 body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--sans);
+  line-height: 1.5;
 }
 
 .mpw {
   max-width: 960px;
   margin: 0 auto;
-  padding: 1.5rem 1rem 4rem;
+  padding: 2.5rem 1.25rem 5rem;
+  counter-reset: mpw-section;
 }
 
 .mpw-skip {
@@ -49,31 +55,82 @@ input:focus-visible {
   outline-offset: 2px;
 }
 
+.mpw-masthead {
+  border-bottom: 3px double var(--ink);
+  padding-bottom: 1rem;
+  margin-bottom: 0.5rem;
+}
+.mpw-overline {
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.25rem;
+}
+.mpw h1 {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 2.4rem;
+  line-height: 1.1;
+  margin: 0 0 0.5rem;
+}
+
+.mpw-banner {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 1rem 1.25rem;
+  margin: 1.25rem 0;
+  border-radius: 10px;
+}
+.mpw-banner p {
+  margin: 0.25rem 0;
+}
+.mpw-banner .mpw-muted {
+  color: #cfc9ba;
+}
+
+.mpw-note {
+  font-size: 0.9rem;
+}
+
+h2.mpw-sec {
+  counter-increment: mpw-section;
+  font-family: var(--serif);
+  font-size: 1.35rem;
+  margin: 2rem 0 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+}
+h2.mpw-sec::before {
+  content: counter(mpw-section, decimal-leading-zero) " — ";
+  color: var(--accent);
+  font-size: 0.95rem;
+  font-family: var(--sans);
+  letter-spacing: 0.08em;
+}
+
 button {
   font: inherit;
-  padding: 0.45rem 0.9rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
   border: 1px solid var(--ink);
   background: var(--card);
   color: var(--ink);
-  border-radius: 6px;
+  border-radius: 999px;
   cursor: pointer;
+  box-shadow: 0 1px 0 var(--ink);
 }
 button:disabled {
   opacity: 0.45;
   cursor: default;
+  box-shadow: none;
 }
 button:not(:disabled):hover {
-  background: #eef0f4;
+  background: var(--accent-soft);
 }
-
-.mpw-banner {
-  border: 2px solid var(--ink);
-  background: var(--card);
-  padding: 1rem 1.25rem;
-  margin: 1rem 0;
-}
-.mpw-banner p {
-  margin: 0.25rem 0;
+button:not(:disabled):active {
+  transform: translateY(1px);
+  box-shadow: none;
 }
 
 .mpw-grid {
@@ -89,11 +146,11 @@ button:not(:disabled):hover {
 .mpw-card {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
   margin: 0.75rem 0;
+  box-shadow: 0 1px 2px rgb(27 23 18 / 0.06);
 }
-.mpw-card h2,
 .mpw-card h3 {
   margin: 0.25rem 0 0.5rem;
 }
@@ -109,7 +166,8 @@ button:not(:disabled):hover {
   font-variant-numeric: tabular-nums;
 }
 .mpw-conclusion {
-  font-size: 1.25rem;
+  font-family: var(--serif);
+  font-size: 1.4rem;
   letter-spacing: 0.02em;
 }
 
@@ -118,27 +176,29 @@ button:not(:disabled):hover {
   padding: 0 0.4rem;
   border-radius: 4px;
   font-size: 0.8rem;
+  font-family: var(--mono);
   border: 1px solid var(--line);
 }
 .mpw-tag-h { background: var(--tag-h); }
 .mpw-tag-a { background: var(--tag-a); }
 .mpw-tag-s { background: var(--tag-s); }
 
+.mpw-verdict-yes,
+.mpw-verdict-no {
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+}
 .mpw-verdict-yes {
   background: var(--good-bg);
   color: var(--good-ink);
   border: 1px solid var(--good-ink);
-  border-radius: 6px;
-  padding: 0.5rem 0.75rem;
-  font-weight: 700;
 }
 .mpw-verdict-no {
   background: var(--warn-bg);
   color: var(--warn-ink);
   border: 1px solid var(--warn-ink);
-  border-radius: 6px;
-  padding: 0.5rem 0.75rem;
-  font-weight: 700;
 }
 
 .mpw-subsets {
@@ -158,13 +218,28 @@ button:not(:disabled):hover {
 .mpw-cert {
   border: 2px solid var(--ink);
   background: var(--card);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 1rem 1.25rem;
   margin: 1rem 0;
+  box-shadow: 0 2px 8px rgb(27 23 18 / 0.1);
+}
+.mpw-cert h3 {
+  font-family: var(--serif);
+  font-size: 1.3rem;
+}
+
+.mpw-hash {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  word-break: break-all;
 }
 
 .mpw-muted {
   color: var(--muted);
+}
+.mpw-trace {
+  font-family: var(--mono);
+  font-size: 0.85rem;
 }
 
 .mpw-flash {
