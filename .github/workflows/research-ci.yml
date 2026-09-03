@@ -40,6 +40,9 @@ jobs:
       - name: Replay portable certificate
         if: always()
         run: npm run verify:certificate -- data/certificates/canonical-v2.json
+      - name: Build commit-pinned source snapshot
+        if: always()
+        run: git archive --format=zip --output=mpw-source-${{ github.sha }}.zip HEAD
       - name: Upload research artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -48,4 +51,5 @@ jobs:
           path: |
             data/benchmarks/reconciliation-results.json
             data/certificates/canonical-v2.json
+            mpw-source-${{ github.sha }}.zip
           if-no-files-found: error
