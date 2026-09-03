@@ -35,6 +35,11 @@ export default function App() {
   return (
     <main style={{ fontFamily: "system-ui, sans-serif", maxWidth: 760, margin: "2rem auto", padding: "0 1rem" }}>
       <h1>Minimal Protocol Witness</h1>
+      <p>
+        <strong>Demo outputs are synthetic and deterministic, not claims about real AI models.</strong> Scores,
+        uncertainty, counterfactuals, witness verification, evidence hashes, and certificates are actually
+        recomputed — execute the deterministic synthetic counterfactual evaluation.
+      </p>
       <p>{note}</p>
       <h2>dispute</h2>
       <pre>{fmt(d)}</pre>

@@ -1,5 +1,7 @@
 # Minimal Protocol Witness
 
+> The demonstration model outputs are synthetic and deterministic. They are not claims about real AI models.
+
 answers one question: why do these two evaluation reports disagree?
 
 two labs test the same models on the same benchmark, get opposite established conclusions. human + agent share this live page — same engine underneath — and hunt the smallest protocol difference that flips the result. audience + non-goals in `docs/PRODUCT.md`.
