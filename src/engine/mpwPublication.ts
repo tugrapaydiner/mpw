@@ -97,21 +97,37 @@ interface BuildInputs {
   flipReceipt?: (receipt: ItemReceipt) => ItemReceipt;
 }
 
-// canonical build path: finalizePublication(source). overrides exist so tamper
-// tests can mint bundles whose hashes are authentic for tampered inputs;
-// the loader always regenerates honestly, so those bundles fail there.
-export function buildFinalizedBundle({ source, items, flipReceipt }: BuildInputs): FinalizedPublicationBundle {
-  const subset = subsetFor(source);
-  const protocol = protocolFor(source);
-  const benchItems = items ?? buildBenchmarkItems();
+export interface EvidenceSet {
+  receipts: ItemReceipt[];
+  outcomes: Array<{ id: string; stratum: string; a: 0 | 1; b: 0 | 1; diff: number }>;
+  summary: {
+    scoreA: number;
+    scoreB: number;
+    delta: number;
+    ciLow: number;
+    ciHigh: number;
+    conclusion: "MODEL_A" | "MODEL_B" | "INCONCLUSIVE";
+    coverage: number;
+  };
+  evidenceHash: string;
+}
+
+// full receipt set + stats + identity hash for one protocol world.
+// shared by publication finalizing and certificate witness experiments.
+export function evidenceForProtocol(
+  protocol: Protocol,
+  subset: string[],
+  opts: { items?: ReturnType<typeof buildBenchmarkItems>; flipReceipt?: (receipt: ItemReceipt) => ItemReceipt } = {}
+): EvidenceSet {
+  const benchItems = opts.items ?? buildBenchmarkItems();
   const receipts: ItemReceipt[] = [];
-  const outcomes: Array<{ id: string; stratum: string; a: 0 | 1; b: 0 | 1; diff: number }> = [];
+  const outcomes: EvidenceSet["outcomes"] = [];
   for (const it of benchItems) {
     let rA = simulateItem("MODEL_A", it, protocol, SIM_SEED);
     let rB = simulateItem("MODEL_B", it, protocol, SIM_SEED);
-    if (flipReceipt) {
-      rA = flipReceipt(rA);
-      rB = flipReceipt(rB);
+    if (opts.flipReceipt) {
+      rA = opts.flipReceipt(rA);
+      rB = opts.flipReceipt(rB);
     }
     receipts.push(rA, rB);
     const a = (rA.finalCorrect ? 1 : 0) as 0 | 1;
@@ -120,7 +136,7 @@ export function buildFinalizedBundle({ source, items, flipReceipt }: BuildInputs
   }
   const protoJson = { ...protocol } as unknown as Record<string, JsonValue>;
   const a = analyzeEvidence(outcomes);
-  const summary = {
+  const summary: EvidenceSet["summary"] = {
     scoreA: a.scoreA,
     scoreB: a.scoreB,
     delta: a.delta,
@@ -129,13 +145,24 @@ export function buildFinalizedBundle({ source, items, flipReceipt }: BuildInputs
     conclusion: a.conclusion,
     coverage: a.n,
   };
-  const receiptJson = receipts as unknown as Array<Record<string, JsonValue>>;
   const evidenceHash = hashEvidenceBundle({
     protocol: protoJson,
     subset,
-    receipts: receiptJson,
+    receipts: receipts as unknown as Array<Record<string, JsonValue>>,
     summary: summary as unknown as Record<string, JsonValue>,
   });
+  return { receipts, outcomes, summary, evidenceHash };
+}
+
+// canonical build path: finalizePublication(source). overrides exist so tamper
+// tests can mint bundles whose hashes are authentic for tampered inputs;
+// the loader always regenerates honestly, so those bundles fail there.
+export function buildFinalizedBundle({ source, items, flipReceipt }: BuildInputs): FinalizedPublicationBundle {
+  const subset = subsetFor(source);
+  const protocol = protocolFor(source);
+  const benchItems = items ?? buildBenchmarkItems();
+  const { receipts, summary, evidenceHash } = evidenceForProtocol(protocol, subset, { items: benchItems, flipReceipt });
+  const protoJson = { ...protocol } as unknown as Record<string, JsonValue>;
   const benchmarkHash = hashBenchmark({
     id: BENCHMARK_ID,
     version: BENCHMARK_VERSION,

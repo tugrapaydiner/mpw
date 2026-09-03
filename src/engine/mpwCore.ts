@@ -221,6 +221,8 @@ export function classifyBootstrap({ ciLow, ciHigh }: { ciLow: number; ciHigh: nu
 export const BOOT_ALGO_ID = "mpw-stratified-paired-bootstrap";
 export const BOOT_ALGO_VERSION = 1;
 export const BOOT_CONFIDENCE = 0.95;
+export const BOOT_PRNG_ID = "mulberry32";
+export const BOOT_PRNG_VERSION = 1;
 
 // empirical quantile on sorted ascending values. rank rule: low index
 // floor(0.025*N), high index ceil(0.975*N)-1. deterministic by construction.

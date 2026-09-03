@@ -7,6 +7,7 @@
     "test": "vitest run",
     "fixtures": "vite-node scripts/generate-fixtures.mts",
     "bundles": "vite-node scripts/finalize-publications.mts",
+    "certificate": "vite-node scripts/mint-certificate.mts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src tests scripts vite.config.ts",
     "build": "tsc --noEmit && vite build",

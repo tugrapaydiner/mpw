@@ -1,0 +1,325 @@
+{
+  "body": {
+    "kind": "ReconciliationCertificate",
+    "schemaVersion": 1,
+    "formatVersion": 1,
+    "engineVersion": "mpw-engine/1",
+    "simulatorVersion": "mpw-sim/1",
+    "simulatorSeed": "mpw-canonical-v1",
+    "statistics": {
+      "method": "mpw-stratified-paired-bootstrap",
+      "methodVersion": 1,
+      "prng": "mulberry32",
+      "prngVersion": 1,
+      "seed": "mpw-boot-v1",
+      "replicates": 10000,
+      "confidenceLevel": 0.95,
+      "stratified": true,
+      "paired": true,
+      "strata": [
+        {
+          "name": "multi-step-reasoning",
+          "count": 100
+        },
+        {
+          "name": "quantitative-reasoning",
+          "count": 100
+        },
+        {
+          "name": "instruction-following",
+          "count": 100
+        },
+        {
+          "name": "tool-reasoning",
+          "count": 100
+        }
+      ]
+    },
+    "canonicalization": {
+      "scheme": "JCS",
+      "version": "RFC8785/canonicalize-4.0.0"
+    },
+    "hashAlgorithm": "SHA-256",
+    "disputeId": "mpw-dispute-59b0f51c99bcffcd",
+    "models": [
+      "MODEL_A",
+      "MODEL_B"
+    ],
+    "sourceA": {
+      "publicationId": "mpw-pub-lab-a/1",
+      "publicationHash": "0dfd8b43eb82576cec670d7ceff35aac2923faa2d98e3060ad7fdda2470889d1",
+      "protocol": {
+        "reasoning_budget": 8192,
+        "answer_parser": "tolerant",
+        "retry_policy": "one-retry",
+        "tool_access": "standard"
+      },
+      "scoreA": 0.8675,
+      "scoreB": 0.76,
+      "delta": 0.1075,
+      "ciLow": 0.055,
+      "ciHigh": 0.16,
+      "conclusion": "MODEL_A",
+      "coverage": 400
+    },
+    "sourceB": {
+      "publicationId": "mpw-pub-lab-b/1",
+      "publicationHash": "63d6d1154a1aaa9b216c27dbaaf261e49a22941cbf2cef3fe0dd9b440ff67c1c",
+      "protocol": {
+        "reasoning_budget": 2048,
+        "answer_parser": "strict",
+        "retry_policy": "no-retry",
+        "tool_access": "restricted"
+      },
+      "scoreA": 0.315,
+      "scoreB": 0.525,
+      "delta": -0.21,
+      "ciLow": -0.2675,
+      "ciHigh": -0.1525,
+      "conclusion": "MODEL_B",
+      "coverage": 400
+    },
+    "differences": [
+      "answer_parser",
+      "reasoning_budget",
+      "retry_policy",
+      "tool_access"
+    ],
+    "target": "MODEL_B",
+    "verification": {
+      "status": "VERIFIED",
+      "minimumCardinality": 1,
+      "coMinimumWitnesses": [
+        [
+          "reasoning_budget"
+        ]
+      ],
+      "selectedCandidate": [
+        "reasoning_budget"
+      ],
+      "subsetsEvaluated": 17,
+      "subsetsTotal": 16,
+      "exhaustive": true,
+      "audit": [
+        {
+          "subset": [],
+          "cardinality": 0,
+          "experimentId": "eff8a611edff4304627b70ccfd65b50253f9c27903f789c544f577cb50d02d4c",
+          "conclusion": "MODEL_A",
+          "sufficient": false
+        },
+        {
+          "subset": [
+            "answer_parser"
+          ],
+          "cardinality": 1,
+          "experimentId": "e30bf560e5bac6717615e96a7a3527627381c1e1149c94cf27b793bb7ba54c35",
+          "conclusion": "MODEL_A",
+          "sufficient": false
+        },
+        {
+          "subset": [
+            "reasoning_budget"
+          ],
+          "cardinality": 1,
+          "experimentId": "011df65a8136fbe560d91970750129b83f7d079062aaafd2973b99885a4e0820",
+          "conclusion": "MODEL_B",
+          "sufficient": true
+        },
+        {
+          "subset": [
+            "retry_policy"
+          ],
+          "cardinality": 1,
+          "experimentId": "1592eab894e9041df9c681a28d1bf9948374a4f44062280d3e698e021af05125",
+          "conclusion": "MODEL_A",
+          "sufficient": false
+        },
+        {
+          "subset": [
+            "tool_access"
+          ],
+          "cardinality": 1,
+          "experimentId": "d4e0a871613a5a1845397a9376d5e84cd67bf72622fd37fdc782cd8c0df7b8d7",
+          "conclusion": "MODEL_A",
+          "sufficient": false
+        },
+        {
+          "subset": [
+            "reasoning_budget",
+            "answer_parser"
+          ],
+          "cardinality": 2,
+          "experimentId": "4b85b312fc3c3eec2cf2f4a4340152a17ca6ba20f893abb80877e59627c5ddf0",
+          "conclusion": "MODEL_B",
+          "sufficient": true
+        },
+        {
+          "subset": [
+            "answer_parser",
+            "retry_policy"
+          ],
+          "cardinality": 2,
+          "experimentId": "357e6cafa87501bf30c208d8dd8092bf13d43b020ce30cf7aed2a5a82b50c948",
+          "conclusion": "MODEL_A",
+          "sufficient": false
+        },
+        {
+          "subset": [
+            "answer_parser",
+            "tool_access"
+          ],
+          "cardinality": 2,
+          "experimentId": "9e5f0e31d6c6da52a1dd86c5d390950b42bdaa5985486fa94b06faa725c03414",
+          "conclusion": "MODEL_A",
+          "sufficient": false
+        },
+        {
+          "subset": [
+            "reasoning_budget",
+            "retry_policy"
+          ],
+          "cardinality": 2,
+          "experimentId": "8b5d55b96b52929a7084cb0e7b3277f583851bec0da7f3460d54a41e01c4ddb2",
+          "conclusion": "MODEL_B",
+          "sufficient": true
+        },
+        {
+          "subset": [
+            "reasoning_budget",
+            "tool_access"
+          ],
+          "cardinality": 2,
+          "experimentId": "d09e9cbf52e59d1062027d1ba0463859e02d6cfe2746436090fc19db2c91c969",
+          "conclusion": "MODEL_B",
+          "sufficient": true
+        },
+        {
+          "subset": [
+            "retry_policy",
+            "tool_access"
+          ],
+          "cardinality": 2,
+          "experimentId": "af4acf7bd5c158c89bfa0431418f4e8e8968f075bf1f098a7c7f93759603849b",
+          "conclusion": "MODEL_A",
+          "sufficient": false
+        },
+        {
+          "subset": [
+            "reasoning_budget",
+            "answer_parser",
+            "retry_policy"
+          ],
+          "cardinality": 3,
+          "experimentId": "adb7d0d7ff53dec73451bab3a228e0caa21f33025ff42ef40d0668b23d122370",
+          "conclusion": "MODEL_B",
+          "sufficient": true
+        },
+        {
+          "subset": [
+            "reasoning_budget",
+            "answer_parser",
+            "tool_access"
+          ],
+          "cardinality": 3,
+          "experimentId": "e2197aed7561e0295770877f562510a5f05969d4b2a0541a7b07bb602e850e1e",
+          "conclusion": "MODEL_B",
+          "sufficient": true
+        },
+        {
+          "subset": [
+            "answer_parser",
+            "retry_policy",
+            "tool_access"
+          ],
+          "cardinality": 3,
+          "experimentId": "61840ce35a946111acf9d6b57154c9fa7fa59b400bcdf42abbf2041d0fdcca30",
+          "conclusion": "MODEL_A",
+          "sufficient": false
+        },
+        {
+          "subset": [
+            "reasoning_budget",
+            "retry_policy",
+            "tool_access"
+          ],
+          "cardinality": 3,
+          "experimentId": "8bdecef774ae9f65c80ffbd021d80e6a0a7c8701030705f017bb13f0e0484b8f",
+          "conclusion": "MODEL_B",
+          "sufficient": true
+        },
+        {
+          "subset": [
+            "reasoning_budget",
+            "answer_parser",
+            "retry_policy",
+            "tool_access"
+          ],
+          "cardinality": 4,
+          "experimentId": "cd487b358db0147d45c971aab39498ac611a14d2f58e33469cd81594802dc917",
+          "conclusion": "MODEL_B",
+          "sufficient": true
+        }
+      ]
+    },
+    "witnessExperiment": {
+      "protocol": {
+        "reasoning_budget": 2048,
+        "answer_parser": "tolerant",
+        "retry_policy": "one-retry",
+        "tool_access": "standard"
+      },
+      "changedDimensions": [
+        "reasoning_budget"
+      ],
+      "experimentId": "011df65a8136fbe560d91970750129b83f7d079062aaafd2973b99885a4e0820",
+      "experimentHash": "011df65a8136fbe560d91970750129b83f7d079062aaafd2973b99885a4e0820",
+      "scoreA": 0.6025,
+      "scoreB": 0.725,
+      "delta": -0.1225,
+      "ciLow": -0.1825,
+      "ciHigh": -0.0625,
+      "conclusion": "MODEL_B",
+      "evidenceHash": "bde0c006cbbbcaac10d6d386ed32fd626bfec3afd862933ce4a477f3dbfd7f18",
+      "categories": [
+        {
+          "stratum": "multi-step-reasoning",
+          "n": 100,
+          "scoreA": 0.44,
+          "scoreB": 0.73
+        },
+        {
+          "stratum": "quantitative-reasoning",
+          "n": 100,
+          "scoreA": 0.6,
+          "scoreB": 0.69
+        },
+        {
+          "stratum": "instruction-following",
+          "n": 100,
+          "scoreA": 0.72,
+          "scoreB": 0.73
+        },
+        {
+          "stratum": "tool-reasoning",
+          "n": 100,
+          "scoreA": 0.65,
+          "scoreB": 0.75
+        }
+      ]
+    },
+    "coverage": {
+      "expectedItems": 400,
+      "accountedItems": 400,
+      "percent": 100
+    },
+    "limitations": [
+      "minimality is conditional on the exposed protocol dimensions, fixture, scoring, and conclusion rule",
+      "bootstrap CI measures benchmark-item resampling under fixed category composition, not repeated model runs or universal model uncertainty",
+      "synthetic model outcomes are not claims about real models"
+    ]
+  },
+  "canonical": "{\"canonicalization\":{\"scheme\":\"JCS\",\"version\":\"RFC8785/canonicalize-4.0.0\"},\"coverage\":{\"accountedItems\":400,\"expectedItems\":400,\"percent\":100},\"differences\":[\"answer_parser\",\"reasoning_budget\",\"retry_policy\",\"tool_access\"],\"disputeId\":\"mpw-dispute-59b0f51c99bcffcd\",\"engineVersion\":\"mpw-engine/1\",\"formatVersion\":1,\"hashAlgorithm\":\"SHA-256\",\"kind\":\"ReconciliationCertificate\",\"limitations\":[\"minimality is conditional on the exposed protocol dimensions, fixture, scoring, and conclusion rule\",\"bootstrap CI measures benchmark-item resampling under fixed category composition, not repeated model runs or universal model uncertainty\",\"synthetic model outcomes are not claims about real models\"],\"models\":[\"MODEL_A\",\"MODEL_B\"],\"schemaVersion\":1,\"simulatorSeed\":\"mpw-canonical-v1\",\"simulatorVersion\":\"mpw-sim/1\",\"sourceA\":{\"ciHigh\":0.16,\"ciLow\":0.055,\"conclusion\":\"MODEL_A\",\"coverage\":400,\"delta\":0.1075,\"protocol\":{\"answer_parser\":\"tolerant\",\"reasoning_budget\":8192,\"retry_policy\":\"one-retry\",\"tool_access\":\"standard\"},\"publicationHash\":\"0dfd8b43eb82576cec670d7ceff35aac2923faa2d98e3060ad7fdda2470889d1\",\"publicationId\":\"mpw-pub-lab-a/1\",\"scoreA\":0.8675,\"scoreB\":0.76},\"sourceB\":{\"ciHigh\":-0.1525,\"ciLow\":-0.2675,\"conclusion\":\"MODEL_B\",\"coverage\":400,\"delta\":-0.21,\"protocol\":{\"answer_parser\":\"strict\",\"reasoning_budget\":2048,\"retry_policy\":\"no-retry\",\"tool_access\":\"restricted\"},\"publicationHash\":\"63d6d1154a1aaa9b216c27dbaaf261e49a22941cbf2cef3fe0dd9b440ff67c1c\",\"publicationId\":\"mpw-pub-lab-b/1\",\"scoreA\":0.315,\"scoreB\":0.525},\"statistics\":{\"confidenceLevel\":0.95,\"method\":\"mpw-stratified-paired-bootstrap\",\"methodVersion\":1,\"paired\":true,\"prng\":\"mulberry32\",\"prngVersion\":1,\"replicates\":10000,\"seed\":\"mpw-boot-v1\",\"strata\":[{\"count\":100,\"name\":\"multi-step-reasoning\"},{\"count\":100,\"name\":\"quantitative-reasoning\"},{\"count\":100,\"name\":\"instruction-following\"},{\"count\":100,\"name\":\"tool-reasoning\"}],\"stratified\":true},\"target\":\"MODEL_B\",\"verification\":{\"audit\":[{\"cardinality\":0,\"conclusion\":\"MODEL_A\",\"experimentId\":\"eff8a611edff4304627b70ccfd65b50253f9c27903f789c544f577cb50d02d4c\",\"subset\":[],\"sufficient\":false},{\"cardinality\":1,\"conclusion\":\"MODEL_A\",\"experimentId\":\"e30bf560e5bac6717615e96a7a3527627381c1e1149c94cf27b793bb7ba54c35\",\"subset\":[\"answer_parser\"],\"sufficient\":false},{\"cardinality\":1,\"conclusion\":\"MODEL_B\",\"experimentId\":\"011df65a8136fbe560d91970750129b83f7d079062aaafd2973b99885a4e0820\",\"subset\":[\"reasoning_budget\"],\"sufficient\":true},{\"cardinality\":1,\"conclusion\":\"MODEL_A\",\"experimentId\":\"1592eab894e9041df9c681a28d1bf9948374a4f44062280d3e698e021af05125\",\"subset\":[\"retry_policy\"],\"sufficient\":false},{\"cardinality\":1,\"conclusion\":\"MODEL_A\",\"experimentId\":\"d4e0a871613a5a1845397a9376d5e84cd67bf72622fd37fdc782cd8c0df7b8d7\",\"subset\":[\"tool_access\"],\"sufficient\":false},{\"cardinality\":2,\"conclusion\":\"MODEL_B\",\"experimentId\":\"4b85b312fc3c3eec2cf2f4a4340152a17ca6ba20f893abb80877e59627c5ddf0\",\"subset\":[\"reasoning_budget\",\"answer_parser\"],\"sufficient\":true},{\"cardinality\":2,\"conclusion\":\"MODEL_A\",\"experimentId\":\"357e6cafa87501bf30c208d8dd8092bf13d43b020ce30cf7aed2a5a82b50c948\",\"subset\":[\"answer_parser\",\"retry_policy\"],\"sufficient\":false},{\"cardinality\":2,\"conclusion\":\"MODEL_A\",\"experimentId\":\"9e5f0e31d6c6da52a1dd86c5d390950b42bdaa5985486fa94b06faa725c03414\",\"subset\":[\"answer_parser\",\"tool_access\"],\"sufficient\":false},{\"cardinality\":2,\"conclusion\":\"MODEL_B\",\"experimentId\":\"8b5d55b96b52929a7084cb0e7b3277f583851bec0da7f3460d54a41e01c4ddb2\",\"subset\":[\"reasoning_budget\",\"retry_policy\"],\"sufficient\":true},{\"cardinality\":2,\"conclusion\":\"MODEL_B\",\"experimentId\":\"d09e9cbf52e59d1062027d1ba0463859e02d6cfe2746436090fc19db2c91c969\",\"subset\":[\"reasoning_budget\",\"tool_access\"],\"sufficient\":true},{\"cardinality\":2,\"conclusion\":\"MODEL_A\",\"experimentId\":\"af4acf7bd5c158c89bfa0431418f4e8e8968f075bf1f098a7c7f93759603849b\",\"subset\":[\"retry_policy\",\"tool_access\"],\"sufficient\":false},{\"cardinality\":3,\"conclusion\":\"MODEL_B\",\"experimentId\":\"adb7d0d7ff53dec73451bab3a228e0caa21f33025ff42ef40d0668b23d122370\",\"subset\":[\"reasoning_budget\",\"answer_parser\",\"retry_policy\"],\"sufficient\":true},{\"cardinality\":3,\"conclusion\":\"MODEL_B\",\"experimentId\":\"e2197aed7561e0295770877f562510a5f05969d4b2a0541a7b07bb602e850e1e\",\"subset\":[\"reasoning_budget\",\"answer_parser\",\"tool_access\"],\"sufficient\":true},{\"cardinality\":3,\"conclusion\":\"MODEL_A\",\"experimentId\":\"61840ce35a946111acf9d6b57154c9fa7fa59b400bcdf42abbf2041d0fdcca30\",\"subset\":[\"answer_parser\",\"retry_policy\",\"tool_access\"],\"sufficient\":false},{\"cardinality\":3,\"conclusion\":\"MODEL_B\",\"experimentId\":\"8bdecef774ae9f65c80ffbd021d80e6a0a7c8701030705f017bb13f0e0484b8f\",\"subset\":[\"reasoning_budget\",\"retry_policy\",\"tool_access\"],\"sufficient\":true},{\"cardinality\":4,\"conclusion\":\"MODEL_B\",\"experimentId\":\"cd487b358db0147d45c971aab39498ac611a14d2f58e33469cd81594802dc917\",\"subset\":[\"reasoning_budget\",\"answer_parser\",\"retry_policy\",\"tool_access\"],\"sufficient\":true}],\"coMinimumWitnesses\":[[\"reasoning_budget\"]],\"exhaustive\":true,\"minimumCardinality\":1,\"selectedCandidate\":[\"reasoning_budget\"],\"status\":\"VERIFIED\",\"subsetsEvaluated\":17,\"subsetsTotal\":16},\"witnessExperiment\":{\"categories\":[{\"n\":100,\"scoreA\":0.44,\"scoreB\":0.73,\"stratum\":\"multi-step-reasoning\"},{\"n\":100,\"scoreA\":0.6,\"scoreB\":0.69,\"stratum\":\"quantitative-reasoning\"},{\"n\":100,\"scoreA\":0.72,\"scoreB\":0.73,\"stratum\":\"instruction-following\"},{\"n\":100,\"scoreA\":0.65,\"scoreB\":0.75,\"stratum\":\"tool-reasoning\"}],\"changedDimensions\":[\"reasoning_budget\"],\"ciHigh\":-0.0625,\"ciLow\":-0.1825,\"conclusion\":\"MODEL_B\",\"delta\":-0.1225,\"evidenceHash\":\"bde0c006cbbbcaac10d6d386ed32fd626bfec3afd862933ce4a477f3dbfd7f18\",\"experimentHash\":\"011df65a8136fbe560d91970750129b83f7d079062aaafd2973b99885a4e0820\",\"experimentId\":\"011df65a8136fbe560d91970750129b83f7d079062aaafd2973b99885a4e0820\",\"protocol\":{\"answer_parser\":\"tolerant\",\"reasoning_budget\":2048,\"retry_policy\":\"one-retry\",\"tool_access\":\"standard\"},\"scoreA\":0.6025,\"scoreB\":0.725}}",
+  "certificateHash": "529058561ce162957560838a202a991b724d57b00e9081abfe0c573a438c52db",
+  "certificateId": "mpw-529058561ce16295"
+}
