@@ -1,0 +1,51 @@
+name: External Fragility Grid Study
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "research/**"
+    paths:
+      - ".github/workflows/external-study.yml"
+      - "docs/EXTERNAL_CASE_ANALYSIS_PLAN.md"
+      - "scripts/run-fragility-grid-study.mts"
+      - "src/research/statistics.ts"
+      - "src/research/search.ts"
+      - "src/engine/mpwProvenance.ts"
+      - "package.json"
+      - "package-lock.json"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: external-fragility-grid-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Verify repository before external analysis
+        run: npm run verify
+      - name: Run frozen external study
+        run: npm run external:fragility-grid:write
+      - name: Upload derived study artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mpw-fragility-grid-study-${{ github.sha }}
+          path: |
+            data/external/fragility-grid-study.json
+            data/external/fragility-grid-study-package.json
+          if-no-files-found: error
+          retention-days: 90
