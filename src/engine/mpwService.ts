@@ -4,20 +4,15 @@ import { SIM_SEED, evaluateSubset, simulateItem } from "./mpwSimulator.js";
 import { BOOT_SEED, BOOT_REPLICATES } from "./mpwCore.js";
 import { verifyCandidateWitness } from "./mpwVerify.js";
 import { buildBenchmarkItems } from "./mpwFixture.js";
+import { validateDimensions } from "./mpwValidate.js";
 import type { Subset } from "../types";
 
 const DIMS = [...EXPOSED_DIMENSIONS];
 
 function checkSubset(subset: unknown): Subset {
-  if (!Array.isArray(subset)) throw new Error("subset must be an array");
-  if (subset.length > DIMS.length) throw new Error("too many dims");
-  const seen = new Set<string>();
-  for (const d of subset) {
-    if (typeof d !== "string" || !DIMS.includes(d)) throw new Error(`unknown dim: ${d}`);
-    if (seen.has(d)) throw new Error(`dup dim: ${d}`);
-    seen.add(d);
-  }
-  return [...subset].sort() as Subset;
+  const dims = validateDimensions(subset, "subset");
+  if (dims.length > DIMS.length) throw new Error("too many dims");
+  return [...dims].sort() as Subset;
 }
 
 export function dispute() {

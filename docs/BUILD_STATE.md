@@ -1,12 +1,12 @@
-# build state (updated 2026-09-03, P05)
+# build state (updated 2026-09-03, P06)
 
 WEBMCP_SMOKE_REAL=PASS
-NEXT=P06
+NEXT=P07
 stack: React 19 + TS 5.9 strict + Vite 8 + Vitest 4 + eslint.
 layout: src/{app,components,engine,state,types,webmcp}, data/{publications,fixtures}, scripts, tests/{engine,fixtures,webmcp}, docs/phase-reports.
 gates: `npm run verify` = typecheck + lint + tests + build. green required.
-tests: 67 passing, 15 files. seeds pinned (sim mpw-canonical-v1, boot mpw-boot-v1).
-domain: exact vocabulary in `src/types/domain.ts`, runtime encodings unchanged.
+tests: 73 passing, 16 files. seeds pinned (sim mpw-canonical-v1, boot mpw-boot-v1).
+domain: exact vocabulary in `src/types/domain.ts`, strict validators in `src/engine/mpwValidate.ts`, runtime encodings unchanged.
 smoke: proven live (10 invocations, chrome inspector path). compat PASS recorded.
 deploy: dist ready. pages workflow present.
 head: 0692c97e524e071b6a2124ff9ca213f66691380e
