@@ -1,0 +1,36 @@
+{
+  "kind": "ExternalProtocolReconciliationStudyResult",
+  "version": 1,
+  "studyId": "fragility-grid-held-out-v1",
+  "status": "COMPLETED",
+  "evidenceStatus": "VERIFIED_BY_GITHUB_ACTIONS_EXECUTION",
+  "frozenBeforeExecution": true,
+  "source": {
+    "workflow": "External Fragility Grid Study",
+    "workflowRunId": 33814044740,
+    "workflowHead": "bcd9482062f7f908475aebf9ab5c37d4107ad8ff",
+    "artifactId": 9916109342,
+    "artifactDigest": "sha256:abb4252d0fe541f372fd11afec4d46e3116f369001f8169b47bcbee980260e3c",
+    "artifactRetentionEnds": "2026-12-02T22:38:48Z"
+  },
+  "registeredQuestions": {
+    "minimumWitness": "Does each frozen external candidate have a globally minimum two-coordinate protocol witness under the declared reconciliation rule?",
+    "strictInteraction": "Does the pair reproduce the target while neither singleton changes the base conclusion?"
+  },
+  "results": {
+    "frozenCandidates": 5,
+    "candidatesWithGlobalMinimumCardinalityTwoWitness": 5,
+    "candidatesPassingStrictInteractionCriterion": 0
+  },
+  "interpretation": {
+    "supported": "All five frozen candidates retained a globally minimum witness of cardinality two under the declared MPW sufficiency rule.",
+    "notSupported": "The study did not establish a pure two-way interaction under the stricter preregistered criterion, because no candidate had both singleton substitutions leave the base conclusion unchanged.",
+    "claimBoundary": "Minimum-cardinality reconciliation and strict interaction are different claims; this result supports the former and rejects the latter for this frozen candidate set."
+  },
+  "limitations": [
+    "This checked a small frozen candidate set rather than a representative population of evaluation disputes.",
+    "The derived result depends on the external grid, endpoint choices, conclusion rule, and exposed coordinate mapping declared by the study runner.",
+    "The GitHub Actions artifact contains the full derived outputs; this compact ledger preserves the result and provenance but is not a substitute for rerunning the workflow.",
+    "A minimum protocol witness is descriptive sufficiency within the exposed grid, not a causal attribution."
+  ]
+}
