@@ -18,6 +18,17 @@ export const DEFAULT_BOUNDED_JSON_LIMITS: BoundedJsonLimits = {
 
 const FORBIDDEN_KEYS = new Set(["__proto__", "prototype", "constructor"]);
 
+function invalidJsonError(error: unknown): Error {
+  const message = error instanceof Error ? error.message : String(error);
+  const wrapped = new Error(`invalid JSON: ${message}`);
+  Object.defineProperty(wrapped, "cause", {
+    value: error,
+    writable: true,
+    configurable: true,
+  });
+  return wrapped;
+}
+
 function positiveSafeInteger(value: number, name: string): number {
   if (!Number.isSafeInteger(value) || value <= 0) {
     throw new Error(`${name} must be a positive safe integer`);
@@ -104,7 +115,7 @@ export function parseBoundedJson(
   try {
     value = JSON.parse(text) as unknown;
   } catch (error) {
-    throw new Error(`invalid JSON: ${(error as Error).message}`);
+    throw invalidJsonError(error);
   }
 
   const pending: PendingNode[] = [{ value, depth: 0, path: "$" }];

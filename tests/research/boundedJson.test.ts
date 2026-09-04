@@ -50,7 +50,15 @@ describe("bounded JSON ingestion", () => {
   });
 
   it("rejects invalid JSON and invalid limit overrides", () => {
-    expect(() => parseBoundedJson("{")) .toThrow(/invalid JSON/);
+    let parseError: unknown;
+    try {
+      parseBoundedJson("{");
+    } catch (error) {
+      parseError = error;
+    }
+    expect(parseError).toBeInstanceOf(Error);
+    expect((parseError as Error).message).toMatch(/invalid JSON/);
+    expect((parseError as Error & { cause?: unknown }).cause).toBeInstanceOf(SyntaxError);
     expect(() => normalizeBoundedJsonLimits({ maxBytes: 0 })).toThrow(/positive safe integer/);
     expect(() =>
       normalizeBoundedJsonLimits({ unknown: 1 } as unknown as { maxBytes: number })
