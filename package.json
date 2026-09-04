@@ -21,9 +21,11 @@
     "lint": "eslint src tests scripts vite.config.ts",
     "build": "tsc --noEmit && vite build",
     "verify": "npm run typecheck && npm run lint && npm run test && npm run build",
-    "research:verify": "npm run verify && npm run research:benchmark && npm run statistics:family:write && npm run certificate:v2:write && npm run verify:certificate -- data/certificates/canonical-v2.json",
+    "research:verify": "npm run verify && npm run research:benchmark && npm run research:baselines && npm run statistics:family:write && npm run certificate:v2:write && npm run verify:certificate -- data/certificates/canonical-v2.json",
     "start": "node scripts/serve.mjs dist",
-    "dev": "vite"
+    "dev": "vite",
+    "research:baselines": "vite-node scripts/run-protocol-search-baselines.mts",
+    "research:baselines:write": "vite-node scripts/run-protocol-search-baselines.mts --write"
   },
   "engines": {
     "node": ">=20"

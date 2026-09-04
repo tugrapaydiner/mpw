@@ -1,4 +1,4 @@
-import { exactWitnessSearch } from "./search.js";
+import { exactWitnessSearch, type SearchProof } from "./search.js";
 
 export type StudyConclusion = "BASE" | "TARGET" | "OTHER";
 
@@ -11,6 +11,7 @@ export interface SearchStudyCase {
   id: string;
   tags: string[];
   dimensions: string[];
+  target: LandscapeObservation;
   observation: (subset: readonly string[]) => LandscapeObservation;
 }
 
@@ -21,8 +22,14 @@ export interface StrategyResult {
   status: StrategyStatus;
   candidates: string[][];
   evaluatedSubsets: number;
-  claimsGlobalMinimum: boolean;
-  claimsAllCoMinimum: boolean;
+  proof: SearchProof;
+}
+
+export interface ReferenceResult {
+  status: "FOUND" | "NO_WITNESS";
+  minimumCardinality: number | null;
+  minimumWitnesses: string[][];
+  totalSubsets: number;
 }
 
 export interface CaseStrategyEvaluation {
@@ -30,38 +37,51 @@ export interface CaseStrategyEvaluation {
   tags: string[];
   strategy: string;
   result: StrategyResult;
-  reference: {
-    status: "FOUND" | "NO_WITNESS";
-    minimumCardinality: number | null;
-    minimumWitnesses: string[][];
-  };
+  reference: ReferenceResult;
   sufficientCandidatesOnly: boolean;
   minimumCardinalityCorrect: boolean;
   witnessSetExact: boolean;
   coMinimumComplete: boolean;
-  safeNoWitnessClaim: boolean;
-  pass: boolean;
+  noWitnessDecisionExact: boolean;
+  proofSound: boolean;
+  certifiableExactRecovery: boolean;
+  safeAbstention: boolean;
+  unsafeClaim: boolean;
+}
+
+export interface StrategyAggregate {
+  strategy: string;
+  cases: number;
+  exactWitnessRecovery: number;
+  minimumCardinalityRecovery: number;
+  coMinimumComplete: number;
+  certifiableExactRecovery: number;
+  safeAbstentions: number;
+  unsafeClaims: number;
+  meanEvaluatedSubsets: number;
+}
+
+export interface StudySection {
+  cases: number;
+  evaluations: CaseStrategyEvaluation[];
+  aggregate: StrategyAggregate[];
 }
 
 export interface BaselineStudySummary {
   kind: "ProtocolSearchBaselineStudy";
-  version: 1;
-  cases: number;
+  version: 2;
   strategies: string[];
-  evaluations: CaseStrategyEvaluation[];
-  aggregate: Array<{
-    strategy: string;
-    cases: number;
-    passes: number;
-    exactWitnessRecovery: number;
-    minimumCardinalityRecovery: number;
-    coMinimumComplete: number;
-    unsafeNoWitnessClaims: number;
-    meanEvaluatedSubsets: number;
-  }>;
+  authoredAdversarialCases: StudySection;
+  completeThreeDimensionCensus: StudySection & {
+    dimensions: string[];
+    landscapes: number;
+    effectSeed: string;
+    construction: string;
+  };
   interpretation: string[];
 }
 
+const THREE_DIMENSION_CENSUS_EFFECT_SEED = "mpw-search-census-effects-v1";
 const compare = (left: string, right: string): number => (left < right ? -1 : left > right ? 1 : 0);
 const subsetKey = (subset: readonly string[]): string => [...subset].sort(compare).join("+");
 
@@ -88,25 +108,27 @@ function cardinalityOrder(subsets: readonly string[][]): string[][] {
   );
 }
 
-function targetObservation(testCase: SearchStudyCase): LandscapeObservation {
-  return testCase.observation(normalizedDimensions(testCase.dimensions));
+function isSufficient(testCase: SearchStudyCase, subset: readonly string[]): boolean {
+  return testCase.observation(subset).conclusion === testCase.target.conclusion;
 }
 
-function sufficient(testCase: SearchStudyCase, subset: readonly string[]): boolean {
-  return testCase.observation(subset).conclusion === targetObservation(testCase).conclusion;
-}
-
-function independentReference(testCase: SearchStudyCase) {
+function independentReference(testCase: SearchStudyCase): ReferenceResult {
   const subsets = cardinalityOrder(allSubsets(testCase.dimensions));
-  const sufficientSubsets = subsets.filter((subset) => sufficient(testCase, subset));
+  const sufficientSubsets = subsets.filter((subset) => isSufficient(testCase, subset));
   if (sufficientSubsets.length === 0) {
-    return { status: "NO_WITNESS" as const, minimumCardinality: null, minimumWitnesses: [] as string[][] };
+    return {
+      status: "NO_WITNESS",
+      minimumCardinality: null,
+      minimumWitnesses: [],
+      totalSubsets: subsets.length,
+    };
   }
   const minimumCardinality = sufficientSubsets[0].length;
   return {
-    status: "FOUND" as const,
+    status: "FOUND",
     minimumCardinality,
     minimumWitnesses: sufficientSubsets.filter((subset) => subset.length === minimumCardinality),
+    totalSubsets: subsets.length,
   };
 }
 
@@ -115,51 +137,62 @@ function exactStrategy(testCase: SearchStudyCase): StrategyResult {
     dimensions: testCase.dimensions,
     mode: "landscape",
     maxEvaluations: 2 ** testCase.dimensions.length,
-    isSufficient: (subset) => sufficient(testCase, subset),
+    isSufficient: (subset) => isSufficient(testCase, subset),
   });
   return {
     strategy: "exact-cardinality-landscape",
     status: result.status === "FOUND" ? "FOUND" : "NO_WITNESS",
     candidates: result.minimumWitnesses,
     evaluatedSubsets: result.evaluatedSubsets,
-    claimsGlobalMinimum: result.proof.minimumProven,
-    claimsAllCoMinimum: result.proof.coMinimumComplete,
+    proof: result.proof,
   };
 }
 
 function oneAtATime(testCase: SearchStudyCase): StrategyResult {
   const dimensions = normalizedDimensions(testCase.dimensions);
-  const candidates: string[][] = [];
   let evaluatedSubsets = 1;
-  if (sufficient(testCase, [])) candidates.push([]);
-  if (candidates.length === 0) {
-    for (const dimension of dimensions) {
-      evaluatedSubsets++;
-      if (sufficient(testCase, [dimension])) candidates.push([dimension]);
-    }
+  if (isSufficient(testCase, [])) {
+    return {
+      strategy: "one-at-a-time",
+      status: "FOUND",
+      candidates: [[]],
+      evaluatedSubsets,
+      proof: { minimumProven: true, coMinimumComplete: true, landscapeExhaustive: dimensions.length === 0 },
+    };
+  }
+  const candidates: string[][] = [];
+  for (const dimension of dimensions) {
+    evaluatedSubsets++;
+    if (isSufficient(testCase, [dimension])) candidates.push([dimension]);
+  }
+  if (candidates.length > 0) {
+    return {
+      strategy: "one-at-a-time",
+      status: "FOUND",
+      candidates,
+      evaluatedSubsets,
+      proof: { minimumProven: true, coMinimumComplete: true, landscapeExhaustive: dimensions.length <= 1 },
+    };
   }
   return {
     strategy: "one-at-a-time",
-    status: candidates.length > 0 ? "FOUND" : "UNRESOLVED",
-    candidates,
+    status: "UNRESOLVED",
+    candidates: [],
     evaluatedSubsets,
-    claimsGlobalMinimum: candidates.length > 0,
-    claimsAllCoMinimum: candidates.length > 0,
+    proof: { minimumProven: false, coMinimumComplete: false, landscapeExhaustive: dimensions.length <= 1 },
   };
 }
 
 function firstSufficientBitmask(testCase: SearchStudyCase): StrategyResult {
-  const dimensions = normalizedDimensions(testCase.dimensions);
-  const subsets = allSubsets(dimensions);
+  const subsets = allSubsets(testCase.dimensions);
   for (let index = 0; index < subsets.length; index++) {
-    if (sufficient(testCase, subsets[index])) {
+    if (isSufficient(testCase, subsets[index])) {
       return {
         strategy: "first-sufficient-bitmask",
         status: "FOUND",
         candidates: [subsets[index]],
         evaluatedSubsets: index + 1,
-        claimsGlobalMinimum: true,
-        claimsAllCoMinimum: false,
+        proof: { minimumProven: false, coMinimumComplete: false, landscapeExhaustive: index + 1 === subsets.length },
       };
     }
   }
@@ -168,24 +201,21 @@ function firstSufficientBitmask(testCase: SearchStudyCase): StrategyResult {
     status: "NO_WITNESS",
     candidates: [],
     evaluatedSubsets: subsets.length,
-    claimsGlobalMinimum: true,
-    claimsAllCoMinimum: true,
+    proof: { minimumProven: true, coMinimumComplete: true, landscapeExhaustive: true },
   };
 }
 
 function greedyEffectMatching(testCase: SearchStudyCase): StrategyResult {
   const dimensions = normalizedDimensions(testCase.dimensions);
-  const targetEffect = targetObservation(testCase).effect;
   let chosen: string[] = [];
   let evaluatedSubsets = 1;
-  if (sufficient(testCase, chosen)) {
+  if (isSufficient(testCase, chosen)) {
     return {
       strategy: "greedy-effect-matching",
       status: "FOUND",
       candidates: [[]],
       evaluatedSubsets,
-      claimsGlobalMinimum: true,
-      claimsAllCoMinimum: false,
+      proof: { minimumProven: false, coMinimumComplete: false, landscapeExhaustive: dimensions.length === 0 },
     };
   }
   while (chosen.length < dimensions.length) {
@@ -194,96 +224,61 @@ function greedyEffectMatching(testCase: SearchStudyCase): StrategyResult {
       .map((dimension) => [...chosen, dimension].sort(compare));
     evaluatedSubsets += candidates.length;
     candidates.sort((left, right) => {
-      const leftDistance = Math.abs(testCase.observation(left).effect - targetEffect);
-      const rightDistance = Math.abs(testCase.observation(right).effect - targetEffect);
+      const leftDistance = Math.abs(testCase.observation(left).effect - testCase.target.effect);
+      const rightDistance = Math.abs(testCase.observation(right).effect - testCase.target.effect);
       return leftDistance - rightDistance || compare(subsetKey(left), subsetKey(right));
     });
     chosen = candidates[0];
-    if (sufficient(testCase, chosen)) {
+    if (isSufficient(testCase, chosen)) {
       return {
         strategy: "greedy-effect-matching",
         status: "FOUND",
         candidates: [chosen],
         evaluatedSubsets,
-        claimsGlobalMinimum: true,
-        claimsAllCoMinimum: false,
+        proof: { minimumProven: false, coMinimumComplete: false, landscapeExhaustive: false },
       };
     }
   }
   return {
     strategy: "greedy-effect-matching",
-    status: "NO_WITNESS",
+    status: "UNRESOLVED",
     candidates: [],
     evaluatedSubsets,
-    claimsGlobalMinimum: true,
-    claimsAllCoMinimum: false,
+    proof: { minimumProven: false, coMinimumComplete: false, landscapeExhaustive: false },
   };
 }
 
-function hash(value: string): number {
-  let output = 2166136261 >>> 0;
-  for (let index = 0; index < value.length; index++) {
-    output ^= value.charCodeAt(index);
-    output = Math.imul(output, 16777619);
-  }
-  return output >>> 0;
+function hash(value: readonly string[], dimension: string): boolean {
+  return value.includes(dimension);
 }
 
-function budgetedRandom(testCase: SearchStudyCase): StrategyResult {
-  const subsets = allSubsets(testCase.dimensions);
-  const budget = Math.min(8, subsets.length);
-  const order = subsets
-    .map((subset) => ({ subset, rank: hash(`${testCase.id}|${subsetKey(subset)}`) }))
-    .sort((left, right) => left.rank - right.rank || compare(subsetKey(left.subset), subsetKey(right.subset)))
-    .slice(0, budget);
-  const sufficientSample = order.filter(({ subset }) => sufficient(testCase, subset));
-  if (sufficientSample.length === 0) {
-    return {
-      strategy: "budgeted-random-8",
-      status: budget === subsets.length ? "NO_WITNESS" : "UNRESOLVED",
-      candidates: [],
-      evaluatedSubsets: budget,
-      claimsGlobalMinimum: false,
-      claimsAllCoMinimum: false,
-    };
-  }
-  sufficientSample.sort((left, right) =>
-    left.subset.length - right.subset.length || compare(subsetKey(left.subset), subsetKey(right.subset))
-  );
-  return {
-    strategy: "budgeted-random-8",
-    status: "FOUND",
-    candidates: [sufficientSample[0].subset],
-    evaluatedSubsets: budget,
-    claimsGlobalMinimum: false,
-    claimsAllCoMinimum: false,
-  };
-}
-
-function has(subset: readonly string[], dimension: string): boolean {
-  return subset.includes(dimension);
-}
+const endpointTarget = (effect: number): LandscapeObservation => ({ conclusion: "TARGET", effect });
 
 export const PROTOCOL_SEARCH_STUDY_CASES: SearchStudyCase[] = [
   {
     id: "unique-singleton",
     tags: ["singleton", "monotone"],
-    dimensions: ["budget", "parser", "retry"],
-    observation: (subset) => ({ conclusion: has(subset, "budget") ? "TARGET" : "BASE", effect: has(subset, "budget") ? -0.2 : 0.15 }),
+    dimensions: ["budget", "parser", "retry", "tools"],
+    target: endpointTarget(-0.12),
+    observation: (subset) => ({
+      conclusion: has(subset, "budget") ? "TARGET" : "BASE",
+      effect: 0.1 - (has(subset, "budget") ? 0.22 : 0) + (has(subset, "parser") ? 0.04 : 0),
+    }),
   },
   {
     id: "pair-interaction",
     tags: ["interaction", "minimum-2"],
     dimensions: ["x", "y", "nuisance"],
+    target: endpointTarget(-0.09),
     observation: (subset) => ({
       conclusion: has(subset, "x") && has(subset, "y") ? "TARGET" : "BASE",
       effect: (has(subset, "x") ? -0.04 : 0.11) + (has(subset, "y") ? -0.08 : 0) + (has(subset, "nuisance") ? 0.03 : 0),
     }),
-  },
   {
     id: "triple-interaction",
     tags: ["interaction", "minimum-3"],
     dimensions: ["a", "b", "c", "irrelevant"],
+    target: endpointTarget(-0.15),
     observation: (subset) => ({
       conclusion: ["a", "b", "c"].every((dimension) => has(subset, dimension)) ? "TARGET" : "BASE",
       effect: 0.18 - ["a", "b", "c"].filter((dimension) => has(subset, dimension)).length * 0.11,
@@ -293,12 +288,16 @@ export const PROTOCOL_SEARCH_STUDY_CASES: SearchStudyCase[] = [
     id: "co-minimum-singletons",
     tags: ["co-minimum", "singleton"],
     dimensions: ["x", "y", "z"],
-    observation: (subset) => ({ conclusion: has(subset, "x") || has(subset, "y") ? "TARGET" : "BASE", effect: has(subset, "x") || has(subset, "y") ? -0.1 : 0.1 }),
-  },
+    target: endpointTarget(-0.1),
+    observation: (subset) => ({
+      conclusion: has(subset, "x") || has(subset, "y") ? "TARGET" : "BASE",
+      effect: has(subset, "x") || has(subset, "y") ? -0.1 : 0.1,
+    }),
   {
     id: "co-minimum-pairs",
     tags: ["co-minimum", "minimum-2"],
     dimensions: ["a", "b", "c", "d"],
+    target: endpointTarget(-0.12),
     observation: (subset) => ({
       conclusion: has(subset, "a") && (has(subset, "b") || has(subset, "c")) ? "TARGET" : "BASE",
       effect: has(subset, "a") ? -0.02 - (has(subset, "b") || has(subset, "c") ? 0.1 : 0) : 0.13,
@@ -308,15 +307,17 @@ export const PROTOCOL_SEARCH_STUDY_CASES: SearchStudyCase[] = [
     id: "non-monotone",
     tags: ["non-monotone", "interaction"],
     dimensions: ["x", "y", "z"],
+    target: endpointTarget(-0.08),
     observation: (subset) => {
-      const isTarget = (has(subset, "x") && !has(subset, "y")) || ["x", "y", "z"].every((dimension) => has(subset, dimension));
-      return { conclusion: isTarget ? "TARGET" : "BASE", effect: isTarget ? -0.08 : 0.06 };
+      const target = (has(subset, "x") && !has(subset, "y")) || ["x", "y", "z"].every((dimension) => has(subset, dimension));
+      return { conclusion: target ? "TARGET" : "BASE", effect: target ? -0.08 : 0.06 };
     },
   },
   {
     id: "bitmask-order-trap",
     tags: ["non-minimum-first", "coexisting-explanations"],
     dimensions: ["a", "b", "c"],
+    target: endpointTarget(-0.12),
     observation: (subset) => ({
       conclusion: (has(subset, "a") && has(subset, "b")) || has(subset, "c") ? "TARGET" : "BASE",
       effect: has(subset, "c") ? -0.12 : has(subset, "a") && has(subset, "b") ? -0.04 : 0.1,
@@ -326,6 +327,7 @@ export const PROTOCOL_SEARCH_STUDY_CASES: SearchStudyCase[] = [
     id: "greedy-effect-trap",
     tags: ["greedy-trap", "minimum-2"],
     dimensions: ["a", "b", "c"],
+    target: endpointTarget(-0.2),
     observation: (subset) => {
       const target = (has(subset, "a") && has(subset, "c")) || ["a", "b", "c"].every((dimension) => has(subset, dimension));
       const effect = subsetKey(subset) === "b" ? -0.18 : target ? -0.2 : 0.12 - subset.length * 0.03;
@@ -336,43 +338,66 @@ export const PROTOCOL_SEARCH_STUDY_CASES: SearchStudyCase[] = [
     id: "empty-witness",
     tags: ["empty", "no-categorical-dispute"],
     dimensions: ["x", "y"],
+    target: endpointTarget(0.04),
     observation: (subset) => ({ conclusion: "TARGET", effect: 0.02 + subset.length * 0.01 }),
   },
   {
     id: "no-exposed-witness",
     tags: ["unresolved", "omitted-coordinate"],
     dimensions: ["x", "y", "z"],
-    observation: (subset) => ({ conclusion: subset.length % 2 === 0 ? "BASE" : "OTHER", effect: subset.length * 0.01 }),
+    target: endpointTarget(-0.2),
+    observation: (subset) => ({
+      conclusion: subset.length % 2 === 0 ? "BASE" : "OTHER",
+      effect: 0.12 - subset.length * 0.02,
+    }),
   },
   {
     id: "nuisance-effect",
     tags: ["nuisance", "effect-vs-conclusion"],
     dimensions: ["winner", "nuisance"],
+    target: endpointTarget(-0.05),
     observation: (subset) => ({
       conclusion: has(subset, "winner") ? "TARGET" : "BASE",
-      effect: has(subset, "winner") ? -0.05 : has(subset, "nuisance") ? -0.2 : 0.15,
+      effect: has(subset, "winner") ? -0.05 : has(subset, "nuisance") ? -.2 : .15,
     }),
   },
 ];
 
 const STRATEGIES = [exactStrategy, oneAtATime, firstSufficientBitmask, greedyEffectMatching, budgetedRandom];
 
-function evaluateStrategy(testCase: SearchStudyCase, strategy: (testCase: SearchStudyCase) => StrategyResult): CaseStrategyEvaluation {
+function sameSet(left: ReadonlySet<string>, right: ReadonlySet<string>): boolean {
+  return left.size === right.size && [...left].every((value) => right.has(value));
+}
+
+function evaluateStrategy(
+  testCase: SearchStudyCase,
+  strategy: (value: SearchStudyCase) => StrategyResult
+): CaseStrategyEvaluation {
   const reference = independentReference(testCase);
   const result = strategy(testCase);
   const candidateKeys = new Set(result.candidates.map(subsetKey));
   const referenceKeys = new Set(reference.minimumWitnesses.map(subsetKey));
-  const sufficientCandidatesOnly = result.candidates.every((candidate) => sufficient(testCase, candidate));
+  const sufficientCandidatesOnly = result.candidates.every((candidate) => isSufficient(testCase, candidate));
   const minimumCardinalityCorrect = reference.status === "NO_WITNESS"
-    ? result.status !== "FOUND"
-    : result.status === "FOUND" && result.candidates.every((candidate) => candidate.length === reference.minimumCardinality);
-  const witnessSetExact =
-    result.status === reference.status &&
-    candidateKeys.size === referenceKeys.size &&
-    [...candidateKeys].every((candidate) => referenceKeys.has(candidate));
-  const coMinimumComplete = reference.minimumWitnesses.every((candidate) => candidateKeys.has(subsetKey(candidate)));
-  const safeNoWitnessClaim = result.status !== "NO_WITNESS" || reference.status === "NO_WITNESS";
-  const pass = sufficientCandidatesOnly && minimumCardinalityCorrect && witnessSetExact && coMinimumComplete && safeNoWitnessClaim;
+    ? result.status === "NO_WITNESS"
+    : result.status === "FOUND" && result.candidates.length > 0 &&
+      result.candidates.every((candidate) => candidate.length === reference.minimumCardinality);
+  const witnessSetExact = result.status === reference.status && sameSet(candidateKeys, referenceKeys);
+  const coMinimumComplete = reference.status === "NO_WITNESS"
+    ? result.status === "NO_WITNESS"
+    : reference.minimumWitnesses.every((candidate) => candidateKeys.has(subsetKey(candidate)));
+  const noWitnessDecisionExact = result.status === "NO_WITNESS" && reference.status === "NO_WITNESS";
+  const minimumProofSound = !result.proof.minimumProven ||
+    (reference.status === "NO_WITNESS"
+      ? result.status === "NO_WITNESS"
+      : minimumCardinalityCorrect);
+  const coMinimumProofSound = !result.proof.coMinimumComplete || witnessSetExact;
+  const landscapeProofSound = !result.proof.landscapeExhaustive || result.evaluatedSubsets === reference.totalSubsets;
+  const proofSound = minimumProofSound && coMinimumProofSound && landscapeProofSound;
+  const falseNoWitnessClaim = result.status === "NO_WITNESS" && reference.status !== "NO_WITNESS";
+  const certifiableExactRecovery = witnessSetExact && result.proof.minimumProven && result.proof.coMinimumComplete;
+  const safeAbstention = result.status === "UNRESOLVED" && result.candidates.length === 0;
+  const unsafeClaim = !sufficientCandidatesOnly || falseNoWitnessClaim || !proofSound;
   return {
     caseId: testCase.id,
     tags: [...testCase.tags],
@@ -383,40 +408,84 @@ function evaluateStrategy(testCase: SearchStudyCase, strategy: (testCase: Search
     minimumCardinalityCorrect,
     witnessSetExact,
     coMinimumComplete,
-    safeNoWitnessClaim,
-    pass,
+    noWitnessDecisionExact,
+    proofSound,
+    certifiableExactRecovery,
+    safeAbstention,
+    unsafeClaim,
   };
 }
 
-export function runProtocolSearchBaselineStudy(): BaselineStudySummary {
-  const evaluations = PROTOCOL_SEARCH_STUDY_CASES.flatMap((testCase) =>
-    STRATEGIES.map((strategy) => evaluateStrategy(testCase, strategy))
-  );
+function aggregateEvaluations(evaluations: readonly CaseStrategyEvaluation[]): StrategyAggregate[] {
   const strategies = [...new Set(evaluations.map((evaluation) => evaluation.strategy))];
-  const aggregate = strategies.map((strategy) => {
+  return strategies.map((strategy) => {
     const rows = evaluations.filter((evaluation) => evaluation.strategy === strategy);
     return {
       strategy,
       cases: rows.length,
-      passes: rows.filter((row) => row.pass).length,
       exactWitnessRecovery: rows.filter((row) => row.witnessSetExact).length,
       minimumCardinalityRecovery: rows.filter((row) => row.minimumCardinalityCorrect).length,
       coMinimumComplete: rows.filter((row) => row.coMinimumComplete).length,
-      unsafeNoWitnessClaims: rows.filter((row) => !row.safeNoWitnessClaim).length,
+      certifiableExactRecovery: rows.filter((row) => row.certifiableExactRecovery).length,
+      safeAbstentions: rows.filter((row) => row.safeAbstention).length,
+      unsafeClaims: rows.filter((row) => row.unsafeClaim).length,
       meanEvaluatedSubsets: rows.reduce((sum, row) => sum + row.result.evaluatedSubsets, 0) / rows.length,
     };
   });
+}
+
+function section(cases: readonly SearchStudyCase[]): StudySection {
+  const evaluations = cases.flatMap((testCase) => STRATEGIES.map((strategy) => evaluateStrategy(testCase, strategy)));
+  return { cases: cases.length, evaluations, aggregate: aggregateEvaluations!evaluations) };
+}
+
+function deterministicEffect(landscape: number, subset: readonly string[]): number {
+  const unit = hash(`${THREE_DIMENSION_CENSUS_EFFECT_SEED}|${String(landscape)}|${subsetKey(subset)}`) / 4294967296;
+  return (unit - 0.5) * 0.5;
+}
+
+export function completeThreeDimensionCases(): SearchStudyCase[] {
+  const dimensions = ["a", "b", "c"];
+  const subsets = allSubsets(dimensions);
+  return Array.from({ length: 2 ** subsets.length }, (_, landscape) => ({
+    id: `boolean-3-${landscape.toString(16).padStart(2, "0")}`,
+    tags: ["complete-boolean-census", "three-dimensions"],
+    dimensions: [...dimensions],
+    target: { conclusion: "TARGET", effect: -0.2 },
+    observation: (subset: readonly string[]) => {
+      const index = dimensions.reduce((mask, dimension, bit) =>
+        has(subset, dimension) ? mask | (1 << bit) : mask, 0);
+      const target = (landscape & (1 << index)) !== 0;
+      return {
+        conclusion: target ? "TARGET" : "BASE",
+        effect: deterministicEffect(landscape, subset),
+      };
+    },
+  }));
+}
+
+export function runProtocolSearchBaselineStudy(): BaselineStudySummary {
+  const authoredAdversarialCases = section(PROTOCOL_SEARCH_SUDY_CASES);
+  const censusCases = completeThreeDimensionCases();
+  const completeThreeDimensionCensus = {
+    ...section(censusCases),
+    dimensions: ["a", "b", "c"],
+    landscapes: censusCases.length,
+    effectSeed: THREE_DIMENSION_CENSUS_EFFECT_SEED,
+    construction:
+      "All 2^(2^3)=256 Boolean sufficiency functions over the eight subsets; effect values are deterministic hash-derived nuisance values used only by effect-greedy baselines.",
+  };
   return {
     kind: "ProtocolSearchBaselineStudy",
-    version: 1,
-    cases: PROTOCOL_SEARCH_STUDY_CASES.length,
-    strategies,
-    evaluations,
-    aggregate,
+    version: 2,
+    strategies: STRATEGIES.map((strategy) => strategy(PROTOCOL_SEARCH_STUDY_CASES[0]).strategy),
+    authoredAdversarialCases,
+    completeThreeDimensionCensus,
     interpretation: [
-      "This is a deterministic stress study over authored landscapes, not an estimate of performance on real evaluation disputes.",
-      "One-at-a-time attribution cannot recover pure interactions; first-sufficient order can return non-minimum witnesses; greedy effect matching can follow a nuisance dimension; budgeted random search cannot prove absence or global minimality.",
-      "Exact cardinality search is combinatorial but is the only evaluated strategy that carries a complete global-minimum and co-minimum proof under arbitrary non-monotone sufficiency.",
+      "The authored section targets named failure modes; the complete three-dimensional census removes cherry-picking over Boolean sufficiency landscapes.",
+      "Exact cardinality search is combinatorial but is the only evaluated strategy with complete minimum-cardinality and co-minimum proof over arbitrary non-monotone sufficiency.",
+      "A heuristic may return a correct candidate without a certificate of global minimality. Exact recovery, safe abstention, and proof soundness are therefore reported separately.",
+      "This deterministic study is algorithmic evidence, not an estimate of performance on real evaluation disputes.",
     ],
   };
 }

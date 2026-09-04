@@ -32,6 +32,8 @@ jobs:
         run: npm run verify
       - name: Reconciliation benchmark
         run: npm run research:benchmark
+      - name: Protocol-search baseline study
+        run: npm run research:baselines:write
       - name: Selection-aware 16-world analysis
         run: npm run statistics:family:write
       - name: Write machine-readable research artifacts
@@ -53,6 +55,8 @@ jobs:
           path: |
             data/analysis/canonical-family-inference.json
             data/benchmarks/reconciliation-results.json
+            data/benchmarks/protocol-search-baselines.json
+            data/benchmarks/protocol-search-baselines-summary.json
             data/certificates/canonical-v2.json
             mpw-source-${{ github.sha }}.zip
           if-no-files-found: error
