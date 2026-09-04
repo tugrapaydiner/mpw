@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: >-
+  If you use this research software, cite the repository revision and the
+  specific protocol package or certificate used in your analysis.
+title: "Minimal Protocol Witness: deterministic protocol reconciliation for conflicting model evaluations"
+type: software
+authors:
+  - family-names: Aydiner
+    given-names: Tugrap Turker
+repository-code: "https://github.com/tugrapaydiner/mpw"
+license: MIT
+version: "0.1.0-research"
+keywords:
+  - AI evaluation
+  - protocol reconciliation
+  - model harness
+  - counterfactual evaluation
+  - reproducible research
+  - WebMCP
+abstract: >-
+  Minimal Protocol Witness is a research prototype for representing finite
+  evaluation-protocol differences, executing or consuming controlled hybrid
+  configurations, and verifying every globally minimum exposed substitution
+  sufficient to reproduce a target evaluation conclusion. Results are
+  directional, descriptive, and conditional rather than automatically causal.
