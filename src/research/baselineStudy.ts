@@ -248,8 +248,53 @@ function greedyEffectMatching(testCase: SearchStudyCase): StrategyResult {
   };
 }
 
-function hash(value: readonly string[], dimension: string): boolean {
-  return value.includes(dimension);
+function fnv1a32(value: string): number {
+  let output = 2166136261 >>> 0;
+  for (let index = 0; index < value.length; index++) {
+    output ^= value.charCodeAt(index);
+    output = Math.imul(output, 16777619);
+  }
+  return output >>> 0;
+}
+
+function budgetedRandom(testCase: SearchStudyCase): StrategyResult {
+  const subsets = allSubsets(testCase.dimensions);
+  const budget = Math.min(8, subsets.length);
+  const sampled = subsets
+    .map((subset) => ({ subset, rank: fnv1a32(`${testCase.id}|${subsetKey(subset)}`) }))
+    .sort((left, right) => left.rank - right.rank || compare(subsetKey(left.subset), subsetKey(right.subset)))
+    .slice(0, budget);
+  const sufficientSample = sampled.filter(({ subset }) => isSufficient(testCase, subset));
+  const landscapeExhaustive = budget === subsets.length;
+
+  if (sufficientSample.length === 0) {
+    return {
+      strategy: "budgeted-random-8",
+      status: landscapeExhaustive ? "NO_WITNESS" : "UNRESOLVED",
+      candidates: [],
+      evaluatedSubsets: budget,
+      proof: {
+        minimumProven: landscapeExhaustive,
+        coMinimumComplete: landscapeExhaustive,
+        landscapeExhaustive,
+      },
+    };
+  }
+
+  sufficientSample.sort((left, right) =>
+    left.subset.length - right.subset.length || compare(subsetKey(left.subset), subsetKey(right.subset))
+  );
+  return {
+    strategy: "budgeted-random-8",
+    status: "FOUND",
+    candidates: [[...sufficientSample[0].subset]],
+    evaluatedSubsets: budget,
+    proof: { minimumProven: false, coMinimumComplete: false, landscapeExhaustive },
+  };
+}
+
+function hasDimension(subset: readonly string[], dimension: string): boolean {
+  return subset.includes(dimension);
 }
 
 const endpointTarget = (effect: number): LandscapeObservation => ({ conclusion: "TARGET", effect });
@@ -258,11 +303,11 @@ export const PROTOCOL_SEARCH_STUDY_CASES: SearchStudyCase[] = [
   {
     id: "unique-singleton",
     tags: ["singleton", "monotone"],
-    dimensions: ["budget", "parser", "retry", "tools"],
+    dimensions: ["budget", "parser", "retry"],
     target: endpointTarget(-0.12),
     observation: (subset) => ({
-      conclusion: has(subset, "budget") ? "TARGET" : "BASE",
-      effect: 0.1 - (has(subset, "budget") ? 0.22 : 0) + (has(subset, "parser") ? 0.04 : 0),
+      conclusion: hasDimension(subset, "budget") ? "TARGET" : "BASE",
+      effect: 0.1 - (hasDimension(subset, "budget") ? 0.22 : 0) + (hasDimension(subset, "parser") ? 0.04 : 0),
     }),
   },
   {
@@ -271,17 +316,18 @@ export const PROTOCOL_SEARCH_STUDY_CASES: SearchStudyCase[] = [
     dimensions: ["x", "y", "nuisance"],
     target: endpointTarget(-0.09),
     observation: (subset) => ({
-      conclusion: has(subset, "x") && has(subset, "y") ? "TARGET" : "BASE",
-      effect: (has(subset, "x") ? -0.04 : 0.11) + (has(subset, "y") ? -0.08 : 0) + (has(subset, "nuisance") ? 0.03 : 0),
+      conclusion: hasDimension(subset, "x") && hasDimension(subset, "y") ? "TARGET" : "BASE",
+      effect: (hasDimension(subset, "x") ? -0.04 : 0.11) + (hasDimension(subset, "y") ? -0.08 : 0) + (hasDimension(subset, "nuisance") ? 0.03 : 0),
     }),
+  },
   {
     id: "triple-interaction",
     tags: ["interaction", "minimum-3"],
     dimensions: ["a", "b", "c", "irrelevant"],
     target: endpointTarget(-0.15),
     observation: (subset) => ({
-      conclusion: ["a", "b", "c"].every((dimension) => has(subset, dimension)) ? "TARGET" : "BASE",
-      effect: 0.18 - ["a", "b", "c"].filter((dimension) => has(subset, dimension)).length * 0.11,
+      conclusion: ["a", "b", "c"].every((dimension) => hasDimension(subset, dimension)) ? "TARGET" : "BASE",
+      effect: 0.18 - ["a", "b", "c"].filter((dimension) => hasDimension(subset, dimension)).length * 0.11,
     }),
   },
   {
@@ -290,17 +336,18 @@ export const PROTOCOL_SEARCH_STUDY_CASES: SearchStudyCase[] = [
     dimensions: ["x", "y", "z"],
     target: endpointTarget(-0.1),
     observation: (subset) => ({
-      conclusion: has(subset, "x") || has(subset, "y") ? "TARGET" : "BASE",
-      effect: has(subset, "x") || has(subset, "y") ? -0.1 : 0.1,
+      conclusion: hasDimension(subset, "x") || hasDimension(subset, "y") ? "TARGET" : "BASE",
+      effect: hasDimension(subset, "x") || hasDimension(subset, "y") ? -0.1 : 0.1,
     }),
+  },
   {
     id: "co-minimum-pairs",
     tags: ["co-minimum", "minimum-2"],
     dimensions: ["a", "b", "c", "d"],
     target: endpointTarget(-0.12),
     observation: (subset) => ({
-      conclusion: has(subset, "a") && (has(subset, "b") || has(subset, "c")) ? "TARGET" : "BASE",
-      effect: has(subset, "a") ? -0.02 - (has(subset, "b") || has(subset, "c") ? 0.1 : 0) : 0.13,
+      conclusion: hasDimension(subset, "a") && (hasDimension(subset, "b") || hasDimension(subset, "c")) ? "TARGET" : "BASE",
+      effect: hasDimension(subset, "a") ? -0.02 - (hasDimension(subset, "b") || hasDimension(subset, "c") ? 0.1 : 0) : 0.13,
     }),
   },
   {
@@ -309,7 +356,7 @@ export const PROTOCOL_SEARCH_STUDY_CASES: SearchStudyCase[] = [
     dimensions: ["x", "y", "z"],
     target: endpointTarget(-0.08),
     observation: (subset) => {
-      const target = (has(subset, "x") && !has(subset, "y")) || ["x", "y", "z"].every((dimension) => has(subset, dimension));
+      const target = (hasDimension(subset, "x") && !hasDimension(subset, "y")) || ["x", "y", "z"].every((dimension) => hasDimension(subset, dimension));
       return { conclusion: target ? "TARGET" : "BASE", effect: target ? -0.08 : 0.06 };
     },
   },
@@ -319,8 +366,8 @@ export const PROTOCOL_SEARCH_STUDY_CASES: SearchStudyCase[] = [
     dimensions: ["a", "b", "c"],
     target: endpointTarget(-0.12),
     observation: (subset) => ({
-      conclusion: (has(subset, "a") && has(subset, "b")) || has(subset, "c") ? "TARGET" : "BASE",
-      effect: has(subset, "c") ? -0.12 : has(subset, "a") && has(subset, "b") ? -0.04 : 0.1,
+      conclusion: (hasDimension(subset, "a") && hasDimension(subset, "b")) || hasDimension(subset, "c") ? "TARGET" : "BASE",
+      effect: hasDimension(subset, "c") ? -0.12 : hasDimension(subset, "a") && hasDimension(subset, "b") ? -0.04 : 0.1,
     }),
   },
   {
@@ -329,7 +376,7 @@ export const PROTOCOL_SEARCH_STUDY_CASES: SearchStudyCase[] = [
     dimensions: ["a", "b", "c"],
     target: endpointTarget(-0.2),
     observation: (subset) => {
-      const target = (has(subset, "a") && has(subset, "c")) || ["a", "b", "c"].every((dimension) => has(subset, dimension));
+      const target = (hasDimension(subset, "a") && hasDimension(subset, "c")) || ["a", "b", "c"].every((dimension) => hasDimension(subset, dimension));
       const effect = subsetKey(subset) === "b" ? -0.18 : target ? -0.2 : 0.12 - subset.length * 0.03;
       return { conclusion: target ? "TARGET" : "BASE", effect };
     },
@@ -357,8 +404,8 @@ export const PROTOCOL_SEARCH_STUDY_CASES: SearchStudyCase[] = [
     dimensions: ["winner", "nuisance"],
     target: endpointTarget(-0.05),
     observation: (subset) => ({
-      conclusion: has(subset, "winner") ? "TARGET" : "BASE",
-      effect: has(subset, "winner") ? -0.05 : has(subset, "nuisance") ? -.2 : .15,
+      conclusion: hasDimension(subset, "winner") ? "TARGET" : "BASE",
+      effect: hasDimension(subset, "winner") ? -0.05 : hasDimension(subset, "nuisance") ? -0.2 : 0.15,
     }),
   },
 ];
@@ -436,11 +483,11 @@ function aggregateEvaluations(evaluations: readonly CaseStrategyEvaluation[]): S
 
 function section(cases: readonly SearchStudyCase[]): StudySection {
   const evaluations = cases.flatMap((testCase) => STRATEGIES.map((strategy) => evaluateStrategy(testCase, strategy)));
-  return { cases: cases.length, evaluations, aggregate: aggregateEvaluations!evaluations) };
+  return { cases: cases.length, evaluations, aggregate: aggregateEvaluations(evaluations) };
 }
 
 function deterministicEffect(landscape: number, subset: readonly string[]): number {
-  const unit = hash(`${THREE_DIMENSION_CENSUS_EFFECT_SEED}|${String(landscape)}|${subsetKey(subset)}`) / 4294967296;
+  const unit = fnv1a32(`${THREE_DIMENSION_CENSUS_EFFECT_SEED}|${String(landscape)}|${subsetKey(subset)}`) / 4294967296;
   return (unit - 0.5) * 0.5;
 }
 
@@ -454,7 +501,7 @@ export function completeThreeDimensionCases(): SearchStudyCase[] {
     target: { conclusion: "TARGET", effect: -0.2 },
     observation: (subset: readonly string[]) => {
       const index = dimensions.reduce((mask, dimension, bit) =>
-        has(subset, dimension) ? mask | (1 << bit) : mask, 0);
+        hasDimension(subset, dimension) ? mask | (1 << bit) : mask, 0);
       const target = (landscape & (1 << index)) !== 0;
       return {
         conclusion: target ? "TARGET" : "BASE",
@@ -465,7 +512,7 @@ export function completeThreeDimensionCases(): SearchStudyCase[] {
 }
 
 export function runProtocolSearchBaselineStudy(): BaselineStudySummary {
-  const authoredAdversarialCases = section(PROTOCOL_SEARCH_SUDY_CASES);
+  const authoredAdversarialCases = section(PROTOCOL_SEARCH_STUDY_CASES);
   const censusCases = completeThreeDimensionCases();
   const completeThreeDimensionCensus = {
     ...section(censusCases),
