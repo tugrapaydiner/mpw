@@ -28,6 +28,7 @@ describe("reconciliation", () => {
       searchMode: "landscape",
     });
     expect(result.target.conclusion).toBe("TARGET");
+    expect(result.differences).toEqual(["x", "y", "hidden"]);
     expect(result.search.status).toBe("NO_WITNESS");
     expect(result.omittedDifferences).toEqual(["hidden"]);
   });

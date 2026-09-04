@@ -4,6 +4,7 @@ import {
   validateProtocolSchema,
   type FiniteProtocol,
   type ProtocolCoordinate,
+  type ProtocolScalar,
   type ProtocolSchema,
 } from "./protocol.js";
 
@@ -253,7 +254,7 @@ export function alignFiniteProtocol(
 ): ProtocolAlignmentReport {
   const alignment = validateFiniteProtocolAlignment(alignmentInput);
   validateProtocol(protocol, alignment.sourceSchema);
-  const alignedProtocol: FiniteProtocol = {};
+  const alignedProtocol: Record<string, ProtocolScalar> = {};
   const lossyTargetCoordinates: string[] = [];
   const unusedTargetValues: Record<string, ProtocolValue[]> = {};
 

@@ -161,7 +161,7 @@ export function findRobustProtocolWitnesses({
     if (!Array.isArray(row.trials) || row.trials.length === 0) {
       throw new Error(`row ${index} must contain at least one repeated trial`);
     }
-    if (row.trials.some((value) => typeof value !== "boolean")) {
+    if (row.trials.some((value: unknown) => typeof value !== "boolean")) {
       throw new Error(`row ${index} trials must be booleans`);
     }
     inputByKey.set(key, { subset, trials: [...row.trials] });

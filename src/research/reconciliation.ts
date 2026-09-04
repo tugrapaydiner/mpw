@@ -43,6 +43,7 @@ export interface WitnessDiagnostic {
 
 export interface ReconciliationResult<Conclusion extends string = string> {
   direction: ReconciliationDirection;
+  differences: string[];
   exposedDimensions: string[];
   omittedDifferences: string[];
   base: ReconciliationObservation<Conclusion>;
@@ -183,6 +184,7 @@ export function reconcileDirection<Conclusion extends string = string>({
 
   return {
     direction,
+    differences: [...differences],
     exposedDimensions: [...exposed],
     omittedDifferences,
     base: { ...base },

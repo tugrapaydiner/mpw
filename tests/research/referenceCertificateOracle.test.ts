@@ -111,7 +111,7 @@ describe("independent certificate reference oracle", () => {
     );
     expect(row).toBeDefined();
     if (!row) return;
-    row.protocol.x = 0;
+    row.protocol = { ...row.protocol, x: 0 };
     expect(() => verifyCertificateWithReferenceOracle(rehash(tampered))).toThrow(
       /protocol/
     );

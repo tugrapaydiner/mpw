@@ -322,10 +322,12 @@ export async function verifyArtifactIdentitySignature(
   } catch (error) {
     return signatureFailure(checks, "signature.encoding", (error as Error).message);
   }
+  const signatureBytes = new Uint8Array(signature.byteLength);
+  signatureBytes.set(signature);
   const valid = await subtle().verify(
     ARTIFACT_SIGNATURE_ALGORITHM,
     expectedPublicKey,
-    signature,
+    signatureBytes,
     encoder.encode(canonicalStatement)
   );
   if (!valid) return signatureFailure(checks, "signature.cryptographic", "Ed25519 verification failed");

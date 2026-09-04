@@ -6,6 +6,7 @@ import {
   protocolDifferences,
   protocolKey,
   type FiniteProtocol,
+  type ProtocolScalar,
 } from "./protocol.js";
 import type { ReconciliationDirection } from "./reconciliation.js";
 import {
@@ -35,7 +36,7 @@ function hybridFor(
   source: FiniteProtocol,
   subset: readonly string[]
 ): FiniteProtocol {
-  const protocol: FiniteProtocol = { ...base };
+  const protocol: Record<string, ProtocolScalar> = { ...base };
   for (const dimension of subset) protocol[dimension] = source[dimension];
   return protocol;
 }

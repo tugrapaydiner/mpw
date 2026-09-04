@@ -7,6 +7,7 @@ import {
   validateProtocol,
   validateProtocolSchema,
   type FiniteProtocol,
+  type ProtocolScalar,
   type ProtocolSchema,
 } from "./protocol.js";
 import {
@@ -176,7 +177,7 @@ function endpointCube(
   const count = 2 ** differences.length;
   const worlds: FiniteProtocol[] = [];
   for (let mask = 0; mask < count; mask++) {
-    const protocol: FiniteProtocol = { ...base };
+    const protocol: Record<string, ProtocolScalar> = { ...base };
     differences.forEach((dimension, index) => {
       if ((mask & (1 << index)) !== 0) protocol[dimension] = source[dimension];
     });
@@ -194,7 +195,7 @@ function normalizeWorlds<Conclusion extends string>(
   if (!Array.isArray(worlds)) throw new Error("worlds must be an array");
   const expected = new Set(expectedProtocols.map((protocol) => protocolKey(protocol, schema)));
   const seen = new Set<string>();
-  const normalized = worlds.map((world, index) => {
+  const normalized = worlds.map((world, index): StaticGridWorld<Conclusion> => {
     exactKeys(world, ["protocol", "observation"], `worlds[${index}]`);
     validateProtocol(world.protocol, schema);
     const key = protocolKey(world.protocol, schema);
@@ -203,7 +204,10 @@ function normalizeWorlds<Conclusion extends string>(
     seen.add(key);
     return {
       protocol: { ...world.protocol },
-      observation: normalizeObservation(world.observation, `worlds[${index}].observation`),
+      observation: normalizeObservation<Conclusion>(
+        world.observation,
+        `worlds[${index}].observation`
+      ),
     };
   });
   const missing = [...expected].filter((key) => !seen.has(key));

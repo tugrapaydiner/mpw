@@ -4,7 +4,11 @@ import {
   type CertificateDecisionStatus,
   type ProtocolReconciliationCertificate,
 } from "./certificate.js";
-import type { FiniteProtocol, ProtocolSchema } from "./protocol.js";
+import type {
+  FiniteProtocol,
+  ProtocolScalar,
+  ProtocolSchema,
+} from "./protocol.js";
 
 export interface ReferenceCertificateOracleCheck {
   check: string;
@@ -119,7 +123,7 @@ function expectedHybrid(
   source: FiniteProtocol,
   subset: readonly string[]
 ): FiniteProtocol {
-  const hybrid: FiniteProtocol = { ...base };
+  const hybrid: Record<string, ProtocolScalar> = { ...base };
   for (const dimension of subset) hybrid[dimension] = source[dimension];
   return hybrid;
 }
