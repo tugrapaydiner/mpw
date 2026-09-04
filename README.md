@@ -1,198 +1,267 @@
-# Minimal Protocol Witness (mpw)
+# Minimal Protocol Witness
 
-Two labs publish opposite conclusions from the same benchmark. An agent and a human
-share one live page, run controlled protocol experiments, and converge on the smallest
-change that reproduces the disagreement — verified by deterministic code, certified by hash.
+MPW is a deterministic research system for reconciling conflicting model-evaluation conclusions by testing controlled protocol substitutions.
 
-**The demonstration model outputs are synthetic and deterministic. They are not claims
-about real AI models.**
+Two reports may evaluate the same models and benchmark yet disagree because prompting, reasoning budget, parsing, retries, tool access, scaffolding, or other harness choices differ. MPW represents those differences as a finite protocol space, evaluates counterfactual hybrids, and identifies every globally minimum exposed substitution sufficient to reproduce a target conclusion.
 
-## Problem
+The result is **descriptive and conditional**. It is not automatically a causal explanation, a universal model ranking, or proof that either publisher is wrong.
 
-Evaluation outcomes depend on harness and protocol choices — scaffold-only variation up
-to 15 points on SWE-bench Verified (Epoch AI, 2026), harness-selected winners (fragility
-grid, 2026), rank flips on every alignment benchmark tested (SafetyRepro, 2026). When two
-published evaluations disagree, today's workflow is weeks of manual reimplementation with
-no standard artifact. See `docs/IMPACT_AND_PRIOR_ART.md`.
+## Research question
 
-## 15-second explanation
+Let `Theta` be a finite protocol configuration space and let `C(theta)` be the evaluation conclusion produced under protocol `theta`.
 
-Same 400 synthetic items, same two models. Lab A says MODEL_A wins; Lab B says MODEL_B
-wins. They differ in four protocol settings. The app lets you (or a browser agent) flip
-each setting under controlled conditions until Lab B's conclusion reproduces — then
-exhaustively proves which single change is the global minimum, and issues a content-hashed
-certificate for it.
+For two source protocols `theta_A` and `theta_B` with different conclusions, define `H` as the coordinates on which the protocols differ. For any `S ⊆ H`, `theta_(A<-B,S)` starts from `theta_A` and substitutes exactly the values of `theta_B` on `S`.
 
-## Live demo
+A categorical A-to-B witness satisfies
 
-`https://tugrapaydiner.github.io/mpw/` (static HTTPS, no keys, no backend).
+```text
+C(theta_(A<-B,S)) = C(theta_B).
+```
 
-## Why WebMCP?
+The minimum-cardinality problem is
 
-A static benchmark page exposes charts and conclusions. This application exposes semantic
-experimental operations directly to the user's browser agent — `read_dispute`,
-`run_counterfactual`, `inspect_evidence`, `verify_witness` — while the human and the
-agent share the same live investigation state.
+```text
+minimize |S|
+subject to C(theta_(A<-B,S)) = C(theta_B).
+```
 
-## Critical user journey
+MPW returns **all** subsets attaining the global minimum. It distinguishes global minimum cardinality from mere inclusion minimality, and it computes A-to-B and B-to-A reconciliation separately because they can be asymmetric.
 
-Read the dispute → run one-dimension hybrids → inspect the evidence → verify the
-smallest reproducing set → receive the certificate. Any order works; nothing is forced.
+The full formulation, including empty witnesses, no-witness states, uncertainty, cost-sensitive variants, effect matching, and non-monotonicity, is in [`docs/RESEARCH_FORMALIZATION.md`](docs/RESEARCH_FORMALIZATION.md).
 
-## What the agent does
+## What is implemented
 
-The agent chooses investigation actions: which dimensions to adopt, which experiment to
-inspect, which candidate to verify. It decides nothing scientific — every conclusion,
-minimum, and hash is computed by deterministic code and checked against it.
+### Generic finite protocol core
 
-## What deterministic code does
+The research core supports arbitrary finite typed coordinates rather than embedding the canonical four dimensions in the search algorithm. Simulator-specific meaning remains outside the generic substitution and reconciliation modules.
 
-The app code recomputes everything on every action: scores, 95% CIs, counterfactuals,
-the global minimum witness, JCS canonical bytes, SHA-256 hashes, and the certificate —
-and revalidates them on load. The LLM never calculates or certifies.
+Core modules:
 
-## Minimal Protocol Witness
+```text
+src/research/protocol.ts
+src/research/search.ts
+src/research/reconciliation.ts
+```
 
-### Mathematical definition
+### Exact search without a monotonicity assumption
 
-Fixed exposed set `D` (|D| = 4), base protocol θ_A (Lab A), target conclusion C(θ_B).
-For `S ⊆ D`, hybrid θ_(A←B,S) starts from θ_A and replaces exactly the dims in `S`
-with θ_B values. Item-level paired difference Δ(θ) = mean over items of (a − b).
+Protocol sufficiency can be non-monotone: adding a change can move a conclusion away from the target or through `INCONCLUSIVE`. The default exact algorithms therefore do not silently prune supersets as if sufficiency were monotone.
 
-Conclusion rule (CI-only, never the point estimate): MODEL_A iff ciLow > 0, MODEL_B
-iff ciHigh < 0, else INCONCLUSIVE.
+Two proof levels are reported separately:
 
-`S` is a sufficient witness iff C(θ_(A←B,S)) = C(θ_B). Global minimum cardinality =
-min |S| over sufficient `S` (null if none). Minimum witnesses = ALL sufficient sets at
-that cardinality; co-minimum witnesses = the same set (ties are never dropped; an
-inclusion-minimal larger set is never substituted).
+- `minimumProven`: no smaller sufficient subset exists;
+- `coMinimumComplete`: every witness at the minimum cardinality was evaluated and returned;
+- `landscapeExhaustive`: the entire endpoint-substitution powerset was evaluated.
 
-Conditional limitation: every witness is conditional on the exposed dims, fixture,
-simulator/evaluator, scoring rule, uncertainty method, and conclusion rule. Change any
-and the result is recomputed. This is descriptive sufficiency inside a fixture — not
-causality, not universality, not fraud detection.
+Cardinality-ordered minimum search stops only after completing the first sufficient level. Full-landscape mode evaluates every subset.
 
-### Category-stratified paired bootstrap
+[`docs/EXACT_SEARCH_QUERY_LOWER_BOUND.md`](docs/EXACT_SEARCH_QUERY_LOWER_BOUND.md) proves the black-box query requirement: under an arbitrary Boolean sufficiency map, proving a minimum of size `k` and returning all ties requires resolving every subset of size at most `k`; proving no witness exists requires all `2^|H|` subsets.
 
-10,000 replicates, seed `mpw-boot-v1`, mulberry32 PRNG. Each replicate resamples 100
-items with replacement *within each of the four fixed strata* (100/category preserved)
-and carries each item's paired (a, b) outcome together. CI = 2.5/97.5 percentiles.
-Limitation: the interval measures benchmark-item resampling under fixed composition —
-not repeated model runs, not universal model uncertainty.
+### Reconciliation benchmark
 
-### Synthetic simulator/fixture
+The project is not tested only on the canonical reasoning-budget example. The deterministic benchmark includes landscapes with:
 
-400 items (4 strata × 100) with hashed per-item latents (difficulty, demand, fragility,
-recoverability, tool need). Two model profiles (base, efficiency, reliability, retry,
-tool). Per-item outcomes derive mechanistically from model × item × protocol properties
-(budget normalization, parser acceptance, retry recovery, tool restriction) with
-tuple-hashed draws (seed `mpw-canonical-v1`). 12,800 receipts regenerable via
-`npm run fixtures`.
+- unique singleton witnesses;
+- multiple co-minimum witnesses;
+- minimum sizes two and three or greater;
+- an empty witness;
+- no exposed witness;
+- source or target `INCONCLUSIVE`;
+- non-monotone sufficiency;
+- interactions;
+- redundant and irrelevant coordinates;
+- large nuisance effects;
+- missing evidence;
+- corrupted source declarations.
 
-### Source-integrity checks
+The benchmark checks exact recovery, all-tie recovery, unresolved states, deterministic behavior, candidate counts, certificate agreement, and independent-oracle agreement.
 
-Each publication must reproduce its own headline at full precision (exact scores, CI,
-conclusion, coverage, universe hash, versions) or the run raises
-SOURCE_INTEGRITY_FAILURE. Canonical: Lab A MODEL_A (.8675/.7600, +.1075, [.055,.16]),
-Lab B MODEL_B (.3150/.5250, −.2100, [−.2675,−.1525]), coverage 400/400.
+### Statistical methods
 
-### Counterfactual engine
+The canonical fixed-item analysis reports the paired accuracy difference `Delta = accuracy(A) - accuracy(B)` and uses a category-stratified paired nonparametric bootstrap. Each resample preserves declared stratum sizes and carries the two model outcomes for an item together.
 
-`diffProtocols` derives the four differences; `constructHybrid` changes only selected
-dims; every result is freshly simulated (no table lookups); experiment ids are content
-hashes; order-free and repeat-stable.
+That interval describes sensitivity to benchmark-item composition under the fixed evaluation artifact. It does not include repeated model-run, training, grader, or deployment variance.
 
-### Global minimum verification
+The research branch also separates three distinct questions:
 
-Bitmask powerset enumeration (all 16 subsets, past the early minimum), per-row
-cardinality + experiment id + CI + sufficiency; INCONCLUSIVE targets and UNRESOLVED
-outcomes supported; 20-dimension cap. Canonical result: minimum 1, unique witness
-`{reasoning_budget}`.
+1. a pointwise interval for one fixed protocol;
+2. synchronized simultaneous bootstrap bands for a predeclared finite protocol family;
+3. robust target-reproduction probability under repeated stochastic evaluations.
 
-### Provenance/certificate
+The repeated-evaluation method uses simultaneous Bonferroni-Hoeffding lower bounds over the complete declared subset family. It deliberately fails to certify a high-probability witness when the repetition count is inadequate. It is implemented methodology, not evidence that the deterministic canonical witness is robust in real deployments.
 
-JCS (RFC 8785) canonical bytes + pre-validation gate, SHA-256 over UTF-8, normalized
-collections. Hashes prove content identity only. Finalized publication bundles carry
-protocol/benchmark/evidence/manifest hashes under a nonrecursive boundary; the
-Reconciliation Certificate (schema/format/engine/sim/stats/canon/hash versions,
-dispute id, both sources, differences, target, full 16-row audit, witness experiment,
-coverage 400/400/100, three limitations verbatim) hashes to its id. No clock inside.
+See:
 
-## WebMCP tool surface
+- [`docs/STATISTICAL_METHODS.md`](docs/STATISTICAL_METHODS.md)
+- [`docs/ROBUST_WITNESS_METHOD.md`](docs/ROBUST_WITNESS_METHOD.md)
 
-Exactly four top-level tools (`document.modelContext.registerTool`), same services as
-the UI (caller AGENT): `read_dispute`, `run_counterfactual`, `inspect_evidence`,
-`verify_witness`. Strict schemas, handler-side validation, eight coded errors,
-readOnlyHint honestly set. Full contract: `docs/WEBMCP_TOOL_SPEC.md`.
+### Portable static protocol grids
+
+A `StaticProtocolGridPackage` allows an external finite harness grid to be validated and reconciled without importing MPW's canonical simulator. It contains a typed protocol schema, two publication endpoints, every endpoint-substitution world, observations, limitations, canonical bytes, and a SHA-256 content identity.
+
+Validation requires exactly `2^|H|` unique worlds and source declarations matching their endpoint rows. Hashing establishes content identity, not publisher authenticity or truth.
+
+See [`docs/STATIC_PROTOCOL_GRID_PACKAGE.md`](docs/STATIC_PROTOCOL_GRID_PACKAGE.md) and [`schemas/static-protocol-grid-package-v1.schema.json`](schemas/static-protocol-grid-package-v1.schema.json).
+
+### Replayable certificates
+
+Certificate v2 separates two verification levels:
+
+- **content-integrity validation** recomputes canonical bytes, the SHA-256 digest, and the artifact ID;
+- **scientific replay validation** re-executes source declarations, the finite protocol landscape, witness minimality, all co-minimum witnesses, and the selected request against an expected evaluator and publication identities.
+
+Certificates are directional and candidate-bound. The state layer cannot issue the canonical A-to-B certificate for an unrelated reverse-direction request.
+
+Schema and implementation:
+
+```text
+schemas/reconciliation-certificate-v2.schema.json
+src/research/certificate.ts
+src/engine/mpwCanonicalCertificate.ts
+scripts/verify-reconciliation-certificate.mts
+```
+
+A content hash is not a signature and does not authenticate a publisher.
+
+### Shared human and agent services
+
+The React interface and WebMCP tools call the same application services and deterministic engine. An agent chooses which experiments to run; it does not calculate statistics or certify its own answer.
+
+The current semantic tool surface remains intentionally small:
+
+```text
+read_dispute
+run_counterfactual
+inspect_evidence
+verify_witness
+```
+
+Source strings and evidence metadata are treated as untrusted data rather than instructions. Runtime schemas reject unknown properties and invalid coordinates. Experiment identities bind to immutable scientific inputs.
+
+Actual browser/agent performance is a separate empirical question. Deterministic contracts and trace grading do not substitute for executed multi-agent trials.
+
+## Evidence
+
+### Canonical deterministic fixture
+
+The tutorial fixture contains 400 synthetic items in four strata and two synthetic model profiles. Lab A and Lab B use different values for reasoning budget, answer parsing, retry policy, and tool access. The simulator produces item-level receipts from explicit model, item, and protocol mechanisms.
+
+The fixture is designed for deterministic verification and adversarial tests. It makes no claim about real model capability.
+
+### External harness-grid study
+
+The generic reconciler was executed on five frozen candidates from an independently published harness-configuration grid associated with `arXiv:2608.21382`.
+
+- all five contained a globally minimum cardinality-two witness under the declared categorical criterion;
+- zero passed the stricter criterion requiring neither singleton to change the base conclusion.
+
+The negative half is part of the result. This supports external applicability of the exact grid operation, not a claim of pure interaction effects or causal discovery.
+
+See [`docs/EXTERNAL_FRAGILITY_GRID_RESULT.md`](docs/EXTERNAL_FRAGILITY_GRID_RESULT.md).
 
 ## Architecture
 
 ```mermaid
 flowchart TD
-    UI[Human UI] --> SVC[Application services\nHUMAN / AGENT + activity log]
-    TOOLS[4 WebMCP tools] --> SVC
-    SVC --> ENG[Deterministic engine\nsimulator + stats + verifier]
-    SVC --> PROV[Provenance\nJCS + SHA-256]
-    ENG --> CERT[Certificate]
-    PROV --> CERT
+  PUB[Publication endpoints or static grid] --> SCHEMA[Finite protocol schema]
+  SCHEMA --> SUB[Controlled substitution engine]
+  PUB --> EVAL[Evaluator or recorded grid]
+  SUB --> EVAL
+  EVAL --> STATS[Paired / family-scoped statistics]
+  STATS --> SEARCH[Exact witness search]
+  SEARCH --> DIAG[Effect, nuisance, interaction and direction diagnostics]
+  DIAG --> CERT[Portable certificate]
+  CERT --> VERIFY[Integrity and scientific replay verifier]
+  UI[Human investigation UI] --> SERVICE[Shared application services]
+  MCP[WebMCP semantic tools] --> SERVICE
+  SERVICE --> SUB
+  SERVICE --> SEARCH
+  SERVICE --> CERT
 ```
 
-## Agent evals
+The canonical simulator is an adapter to this architecture, not the definition of the generic protocol engine.
 
-Protocol + pending trial table: `docs/AGENT_EVALS.md`. Deterministic trace grading
-(`gradeTrace`) is automated; live-agent trials are human-run, none fabricated.
+## Verification status
 
-## Deterministic tests
+| Claim | Status |
+|---|---|
+| Generic finite substitution and exact witness search are implemented | Verified by source inspection and automated tests |
+| Canonical sources and all 16 worlds replay deterministically | Verified by execution in repository tests and certificate replay |
+| Certificate request direction and candidate are bound | Verified by automated adversarial tests |
+| Reconciliation benchmark covers varied known-ground-truth landscapes | Verified by execution |
+| Exact-search black-box certificate bounds are implemented and tested | Verified by execution |
+| External harness-grid workflow completed for five frozen candidates | Verified by recorded GitHub Actions execution |
+| Independent third party reproduced the full project | Not yet verified |
+| Final WebMCP behavior works across supported production browsers and agents | Not yet verified for the research branch |
+| Real agents outperform DOM-only investigation | Not yet tested |
+| Canonical witness is robust under repeated real model runs | Not established |
+| MPW establishes causal responsibility | Not claimed |
 
-192 tests in 30 files (`npm run verify` = typecheck + lint + tests + build): stats
-proofs, forensic audits, formal MPW properties, mutation/tamper batteries, state
-audits, injection battery, wording pins. Seeds pinned; rebuilds byte-identical.
+## Reproduction
 
-## Reproducibility
+Requirements:
 
-`npm run fixtures && npm run bundles && npm run certificate` regenerates every
-artifact with identical hashes. Reference investigation states:
-`docs/ui-reference-states.json`.
+- Node.js 20 or later;
+- the committed lockfile;
+- no API key, database, GPU, or runtime model dependency for the deterministic research suite.
+
+```bash
+git clone https://github.com/tugrapaydiner/mpw.git
+cd mpw
+git checkout research/deep-mpw-overhaul
+npm ci
+npm run verify
+```
+
+Research workflows and scripts in `package.json` additionally exercise the reconciliation benchmark, family analysis, certificate generation, and certificate replay. Generated outputs are deterministic where their method explicitly declares a pinned seed.
+
+## Repository guide
+
+```text
+src/engine/       canonical simulator, paired analysis, publications, adapters
+src/research/     generic protocol, search, reconciliation, statistics, packages, certificates
+src/state/        shared human/agent investigation state
+src/webmcp/       semantic browser-agent tool contracts
+tests/            unit, property, adversarial, benchmark, and integration checks
+schemas/          versioned portable JSON Schemas
+data/             deterministic fixtures and machine-readable study summaries
+docs/             formalization, methods, landscape, audits, limitations, open questions
+.github/workflows research, external-study, and independent-verification gates
+```
 
 ## Limitations
 
-Witnesses are conditional (six conditions above); bootstrap measures item resampling
-only; synthetic models say nothing about real systems; hashes prove identity, not
-truth; gallery collision check pending (gallery unpublished at write time).
+The largest remaining limitations are empirical rather than cosmetic:
 
-## Impact
+- most controlled ground truth is synthetic;
+- the external study is small and grid-based;
+- repeated real model runs are not yet available for robust-witness inference;
+- live agent and browser evaluations remain pending;
+- publisher authentication and attestations are separate from content hashing;
+- protocol schemas can omit consequential dimensions;
+- exact arbitrary non-monotone search is combinatorial;
+- a categorical witness need not match the target effect magnitude;
+- post-selection, benchmark-selection, and target-publication uncertainty require explicit study designs.
 
-An applied instrument for the 2026 harness-awareness consensus: conflicting
-evaluations in, agent-operable counterfactual search, verified minimum witness out.
-Audience: evaluation researchers, benchmark designers, agent-interface builders.
+## Research landscape and open questions
 
-## Related work
+The project does not claim to invent harness sensitivity, multiverse analysis, minimal counterfactual explanation, paired inference, exhaustive search, content-addressed artifacts, or tool-calling agents.
 
-Harness-effect empirics (Epoch AI; Zhang et al. 2026; Harness-Bench; fragility grid;
-SafetyRepro; GAIA scaffold study); multiverse / specification-curve methods (NeurIPS
-2022; Simonsohn et al.; fairness multiverse); agent-native artifacts (Liu et al.,
-ARA, 2026); NIST AI RMF MEASURE guidance. Details + differentiation in
-`docs/IMPACT_AND_PRIOR_ART.md`. Adjacent concepts acknowledged; nothing here claims
-first-ever.
+Its prospective contribution is the combination of:
 
-## Local development
+- conflicting evaluation publications as the research object;
+- semantic counterfactual protocol operations;
+- exact global minimum and all-tie verification;
+- explicit non-monotone search semantics;
+- portable evidence and replay artifacts;
+- one coherent human and browser-agent investigation workflow.
 
-```sh
-git clone https://github.com/tugrapaydiner/mpw.git
-cd mpw
-npm ci
-npm run verify   # typecheck + lint + tests + build, must be green
-npm run dev      # local dev server
-npm start        # serve production dist locally
-```
+Conservative prior-art analysis is in [`docs/RESEARCH_LANDSCAPE.md`](docs/RESEARCH_LANDSCAPE.md). The highest-value unresolved problems are ranked in [`docs/OPEN_RESEARCH_QUESTIONS.md`](docs/OPEN_RESEARCH_QUESTIONS.md).
 
-Regenerate artifacts: `npm run fixtures`, `npm run bundles`, `npm run certificate`.
+## Project status
 
-## Deployment
-
-Static Pages deploy from `main` (see `docs/DEPLOYMENT.md`). No env vars, no backend.
+This branch should be treated as a **serious research prototype**, not a publication-grade result. The formal and engineering foundation is substantially stronger than the original demonstration, but the next large gains require real repeated evaluations, broader external cases, controlled agent comparisons, and independent reproduction.
 
 ## License
 
-MIT (`LICENSE`) for our source; third-party packages keep their own licenses
-(`docs/DEPENDENCIES_AND_LICENSES.md`).
+MIT for repository source code. Third-party dependencies retain their own licenses; see [`docs/DEPENDENCIES_AND_LICENSES.md`](docs/DEPENDENCIES_AND_LICENSES.md).
