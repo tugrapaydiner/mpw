@@ -1,0 +1,45 @@
+{
+  "kind": "ExternalReconciliationStudySummary",
+  "schemaVersion": 1,
+  "studyId": "mpw-external-fragility-grid-v1",
+  "source": {
+    "primaryReference": "arXiv:2608.21382",
+    "sourceClass": "published external harness-configuration grid",
+    "syntheticCanonicalFixtureUsed": false
+  },
+  "execution": {
+    "repository": "tugrapaydiner/mpw",
+    "branch": "research/deep-mpw-overhaul",
+    "studyCommit": "bcd9482062f7f908475aebf9ab5c37d4107ad8ff",
+    "workflow": "External Fragility Grid Study",
+    "workflowRunId": 33814044740,
+    "workflowJobId": 100842076421,
+    "artifactId": 9916109342
+  },
+  "frozenCandidateCount": 5,
+  "criteria": {
+    "minimumWitnessCriterion": "A candidate passes when exact enumeration identifies a globally minimum two-coordinate set that reproduces the target categorical conclusion within the exposed grid.",
+    "strictInteractionCriterion": "A candidate passes only when the two-coordinate set reproduces the target while neither constituent singleton changes the base categorical conclusion."
+  },
+  "results": {
+    "candidatesWithMinimumCardinalityTwoWitness": 5,
+    "candidatesPassingStrictInteractionCriterion": 0
+  },
+  "interpretation": [
+    "All five frozen external candidates contained a globally minimum two-coordinate reconciliation witness under the declared categorical rule.",
+    "None established the stronger interaction-only pattern in which both singleton substitutions leave the base conclusion unchanged.",
+    "The study therefore supports the feasibility of exact reconciliation on an external published grid, but it does not support a claim that these five cases are irreducible pure interactions."
+  ],
+  "notEstablished": [
+    "causal responsibility for the original ranking changes",
+    "publisher authenticity or truth of the source measurements",
+    "item-level or repeated-run uncertainty beyond the published grid",
+    "general prevalence of two-coordinate witnesses across evaluation systems",
+    "agent or WebMCP performance"
+  ],
+  "verificationStatus": {
+    "workflowExecution": "VERIFIED_BY_EXECUTION",
+    "repositoryImplementation": "VERIFIED_BY_SOURCE_INSPECTION",
+    "independentThirdPartyReproduction": "NOT_YET_VERIFIED"
+  }
+}
