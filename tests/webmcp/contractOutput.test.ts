@@ -83,6 +83,6 @@ describe("WebMCP scientific output contract", () => {
       baseLab: "A",
       adopt: ["reasoning_budget", "reasoning_budget"],
     });
-    expect(duplicate).toMatchObject({ ok: false, code: "TOOL_ARGUMENT_ERROR" });
+    expect(duplicate).toMatchObject({ ok: false, code: "DUPLICATE_DIMENSION" });
   });
 });
