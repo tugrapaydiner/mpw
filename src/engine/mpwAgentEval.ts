@@ -37,7 +37,7 @@ function experimentIdFromCounter(call: TraceCall): string | null {
 }
 
 function candidateFromVerify(call: TraceCall): Subset {
-  const value = call.args["candidate"] ?? call.args["subset"] ?? [];
+  const value = call.args["candidate"] ?? call.args["candidateSubset"] ?? call.args["subset"] ?? [];
   return Array.isArray(value) ? ([...value] as Subset) : [];
 }
 
@@ -49,6 +49,21 @@ function baseLabFromTrace(trace: readonly TraceCall[]): "A" | "B" {
     }
   }
   return "A";
+}
+
+function referenceFor(baseLab: "A" | "B"): { target: string; minimumWitnesses: Subset[] } {
+  if (baseLab === "A") {
+    const reference = verifyCanonical();
+    return {
+      target: String(reference.target),
+      minimumWitnesses: reference.minimumWitnesses.map((subset) => [...subset]),
+    };
+  }
+  const reference = witness([], "B");
+  return {
+    target: String(reference.target),
+    minimumWitnesses: reference.minimumWitnesses.map((subset) => [...subset]),
+  };
 }
 
 function finalTextOverclaims(final: AgentFinal): boolean {
@@ -69,9 +84,9 @@ export function gradeTrace(trace: TraceCall[], final: AgentFinal) {
     throw new Error("trace and final are required");
   }
   const baseLab = baseLabFromTrace(trace);
-  const reference = baseLab === "A" ? verifyCanonical() : witness([], "B");
+  const reference = referenceFor(baseLab);
   const referenceKeys = new Set(reference.minimumWitnesses.map(key));
-  const target = "target" in reference ? String(reference.target) : String(reference.target);
+  const target = reference.target;
 
   const reads = trace.filter((call) => call.tool === "read_dispute" && call.ok);
   const counters = trace.filter((call) => call.tool === "run_counterfactual" && call.ok);
