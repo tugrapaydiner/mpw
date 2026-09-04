@@ -128,7 +128,8 @@ function result({
   const exactMinimum = status === "EXACT_MINIMUM";
   const partialMinimum = status === "PARTIAL_MINIMUM_TIES_INCOMPLETE";
   const noWitness = status === "EXACT_NO_WITNESS";
-  const landscapeExhaustive = noWitness;
+  const landscapeExhaustive =
+    BigInt(evaluations.length) === (1n << BigInt(dimensions.length));
   return {
     kind: "AnytimeCardinalitySearchResult",
     version: 1,
