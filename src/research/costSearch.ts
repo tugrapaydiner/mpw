@@ -143,8 +143,6 @@ export function exactMinimumCostWitnessSearch({
   const costs = normalizeCosts(dimensions, rawCosts);
   const candidates = enumerateCostedSubsets(dimensions, costs);
   const totalSubsets = candidates.length;
-  const plannedEvaluations =
-    mode === "landscape" ? totalSubsets : Math.min(totalSubsets, maxEvaluations);
   if (mode === "landscape" && totalSubsets > maxEvaluations) {
     throw new Error(
       `landscape cost search requires ${totalSubsets} evaluations; budget is ${maxEvaluations}`
@@ -157,20 +155,19 @@ export function exactMinimumCostWitnessSearch({
   let currentCost: number | null = null;
 
   for (const candidate of candidates) {
+    if (
+      mode === "minimum" &&
+      minimumCost !== null &&
+      candidate.totalCost > minimumCost
+    ) {
+      break;
+    }
     if (evaluations.length >= maxEvaluations) {
       throw new Error(
         `minimum cost not proven within evaluation budget ${maxEvaluations}; next cost level is ${candidate.totalCost}`
       );
     }
     if (currentCost !== candidate.totalCost) {
-      if (
-        mode === "minimum" &&
-        minimumCost !== null &&
-        currentCost !== null &&
-        candidate.totalCost > minimumCost
-      ) {
-        break;
-      }
       currentCost = candidate.totalCost;
       evaluatedCostLevels.push(candidate.totalCost);
     }
@@ -187,8 +184,6 @@ export function exactMinimumCostWitnessSearch({
   }
 
   if (mode === "minimum" && minimumCost !== null) {
-    // The loop exits only after every candidate at the first sufficient cost
-    // has been evaluated. No higher-cost row is needed for this proof.
     const unevaluatedSameCost = candidates.some(
       (candidate) =>
         candidate.totalCost === minimumCost &&
@@ -213,7 +208,6 @@ export function exactMinimumCostWitnessSearch({
     );
   }
 
-  void plannedEvaluations;
   return {
     kind: "ExactMinimumCostSearchResult",
     version: 1,
