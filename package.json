@@ -1,19 +1,31 @@
 {
   "name": "mpw",
   "version": "0.1.0",
-  "description": "Minimal Protocol Witness - deterministic reconciliation core (WebMCP tools call this, the LLM never calculates)",
+  "description": "Deterministic protocol-reconciliation research prototype with exact minimum-witness verification",
   "type": "module",
   "scripts": {
     "test": "vitest run",
     "fixtures": "vite-node scripts/generate-fixtures.mts",
     "bundles": "vite-node scripts/finalize-publications.mts",
     "certificate": "vite-node scripts/mint-certificate.mts",
+    "certificate:v2": "vite-node scripts/mint-reconciliation-certificate.mts",
+    "certificate:v2:write": "vite-node scripts/mint-reconciliation-certificate.mts --write",
+    "verify:certificate": "vite-node scripts/verify-reconciliation-certificate.mts",
+    "research:benchmark": "vite-node scripts/run-reconciliation-benchmark.mts",
+    "research:benchmark:write": "vite-node scripts/run-reconciliation-benchmark.mts --write",
+    "statistics:family": "vite-node scripts/analyze-canonical-family.mts",
+    "statistics:family:write": "vite-node scripts/analyze-canonical-family.mts --write",
+    "external:fragility-grid": "vite-node scripts/run-fragility-grid-study.mts",
+    "external:fragility-grid:write": "vite-node scripts/run-fragility-grid-study.mts --write",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src tests scripts vite.config.ts",
     "build": "tsc --noEmit && vite build",
     "verify": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "research:verify": "npm run verify && npm run research:benchmark && npm run research:baselines && npm run statistics:family:write && npm run certificate:v2:write && npm run verify:certificate -- data/certificates/canonical-v2.json",
     "start": "node scripts/serve.mjs dist",
-    "dev": "vite"
+    "dev": "vite",
+    "research:baselines": "vite-node scripts/run-protocol-search-baselines.mts",
+    "research:baselines:write": "vite-node scripts/run-protocol-search-baselines.mts --write"
   },
   "engines": {
     "node": ">=20"

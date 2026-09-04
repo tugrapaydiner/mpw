@@ -1,0 +1,56 @@
+name: Deep Research Gate
+
+on:
+  push:
+    branches:
+      - "research/deep-mpw-overhaul"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deep-research-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact revision
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run full research reproduction
+        run: |
+          mkdir -p artifacts
+          npx vite-node scripts/reproduce-research.mts \
+            --output artifacts/mpw-reproduction-report.json
+
+      - name: Preserve exact revision
+        run: |
+          git rev-parse HEAD > artifacts/repository-head.txt
+          git status --porcelain=v1 > artifacts/post-reproduction-status.txt
+
+      - name: Upload claim-bearing artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mpw-deep-research-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 30
+          path: |
+            artifacts/mpw-reproduction-report.json
+            artifacts/repository-head.txt
+            artifacts/post-reproduction-status.txt
+            data/benchmarks/reconciliation-results.json
+            data/analysis/canonical-family-inference.json
+            data/certificates/canonical-v2.json

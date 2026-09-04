@@ -5,7 +5,11 @@ import { dispute, runCounterfactual, inspectEvidence, witness, canonicalDisputeI
 import { checkSourceIntegrity } from "../engine/mpwVerify.js";
 import { diffProtocols } from "../engine/mpwCounterfactual.js";
 import { LAB_A_PROTOCOL, LAB_B_PROTOCOL, NUM_ITEMS } from "../engine/mpwFixture.js";
-import { buildCertificate, LIMITATIONS } from "../engine/mpwCertificate.js";
+import {
+  buildCanonicalReconciliationCertificate,
+  CANONICAL_RECONCILIATION_LIMITATIONS,
+  verifyCanonicalReconciliationCertificate,
+} from "../engine/mpwCanonicalCertificate.js";
 
 export type Caller = "HUMAN" | "AGENT";
 export type EventSource = "HUMAN" | "AGENT" | "SYSTEM";
@@ -19,6 +23,7 @@ export type ErrorCode =
   | "DUPLICATE_DIMENSION"
   | "INVALID_BASE_LAB"
   | "EVIDENCE_INCOMPLETE"
+  | "CERTIFICATE_REPLAY_FAILURE"
   | "INVALID_CANDIDATE";
 
 export interface ActivityEvent {
@@ -44,6 +49,9 @@ export interface InvestigationState {
     certificateHash: string;
     status: string;
     minimumCardinality: number | null;
+    direction: "A_TO_B" | "B_TO_A";
+    candidate: string[];
+    verificationLevel: "SCIENTIFIC_REPLAY_VALID";
     valid: boolean;
   } | null;
   activity: ActivityEvent[];
@@ -106,6 +114,7 @@ export function toCode(message: string): ErrorCode {
   if (/DUPLICATE_DIMENSION|duplicate/.test(message)) return "DUPLICATE_DIMENSION";
   if (message.includes("INVALID_BASE_LAB")) return "INVALID_BASE_LAB";
   if (message.includes("EVIDENCE_INCOMPLETE")) return "EVIDENCE_INCOMPLETE";
+  if (/CERTIFICATE_(?:REPLAY|NOT_ISSUED|INVALID)/.test(message)) return "CERTIFICATE_REPLAY_FAILURE";
   return "INVALID_CANDIDATE";
 }
 
@@ -211,7 +220,7 @@ export function inspectEvidenceOp(
 export function verifyWitnessOp(
   caller: Caller,
   args: { disputeId?: unknown; baseLab?: unknown; candidate?: unknown }
-): { ok: true; result: ReturnType<typeof witness> & { certificate: { id: string; hash: string } | null; limitation: string } } | { ok: false; code: ErrorCode; error: string } {
+): { ok: true; result: ReturnType<typeof witness> & { certificate: { id: string; hash: string; direction: "A_TO_B" | "B_TO_A"; verificationLevel: "SCIENTIFIC_REPLAY_VALID" } | null; limitation: string } } | { ok: false; code: ErrorCode; error: string } {
   try {
     const a = checkArgs(args, ["disputeId", "baseLab", "candidate"], "VERIFY_WITNESS");
     checkDisputeId(a.disputeId);
@@ -222,23 +231,33 @@ export function verifyWitnessOp(
     const raw = witness(candidate, base);
     let next = log(state, caller, "VERIFY_WITNESS", `${JSON.stringify(sorted)} -> ${raw.status}`);
     let cert: InvestigationState["certificate"] = next.certificate;
-    let certificate: { id: string; hash: string } | null = null;
+    let certificate: { id: string; hash: string; direction: "A_TO_B" | "B_TO_A"; verificationLevel: "SCIENTIFIC_REPLAY_VALID" } | null = null;
     if (raw.status === "VERIFIED") {
-      const built = buildCertificate();
-      certificate = { id: built.certificateId, hash: built.certificateHash };
+      if (base !== "A" && base !== "B") throw new Error(`INVALID_BASE_LAB: ${String(base)}`);
+      const built = buildCanonicalReconciliationCertificate({ baseLab: base, candidate: sorted });
+      const replay = verifyCanonicalReconciliationCertificate(built);
+      certificate = {
+        id: built.certificateId,
+        hash: built.certificateHash,
+        direction: built.body.direction,
+        verificationLevel: replay.status,
+      };
       cert = {
         certificateId: built.certificateId,
         certificateHash: built.certificateHash,
         status: raw.status,
         minimumCardinality: raw.minimumCardinality,
+        direction: built.body.direction,
+        candidate: [...sorted],
+        verificationLevel: replay.status,
         valid: true,
       };
-      next = log(next, "SYSTEM", "VERIFY_WITNESS", `certificate ${built.certificateId} issued`);
+      next = log(next, "SYSTEM", "VERIFY_WITNESS", `replay-verified certificate ${built.certificateId} issued`);
     } else if (cert && cert.valid) {
       cert = { ...cert, valid: false };
       next = log(next, "SYSTEM", "VERIFY_WITNESS", "certificate marked stale: investigation changed");
     }
-    const result = { ...raw, certificate, limitation: LIMITATIONS[0] };
+    const result = { ...raw, certificate, limitation: CANONICAL_RECONCILIATION_LIMITATIONS[0] };
     emit({
       ...next,
       candidate: sorted,

@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tugrapaydiner.github.io/mpw/schemas/static-evaluation-family-v1.schema.json",
+  "title": "MPW Static Evaluation Family Package v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "schemaVersion",
+    "familyId",
+    "title",
+    "benchmark",
+    "systems",
+    "protocolSchema",
+    "worlds",
+    "sources",
+    "analysis",
+    "provenance"
+  ],
+  "properties": {
+    "kind": { "const": "StaticEvaluationFamilyPackage" },
+    "schemaVersion": { "const": 1 },
+    "familyId": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "title": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "benchmark": { "$ref": "#/$defs/benchmark" },
+    "systems": { "$ref": "#/$defs/systems" },
+    "protocolSchema": { "$ref": "#/$defs/protocolSchema" },
+    "worlds": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 1024,
+      "items": { "$ref": "#/$defs/world" }
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["A", "B"],
+      "properties": {
+        "A": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "B": { "type": "string", "minLength": 1, "maxLength": 300 }
+      }
+    },
+    "analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seed", "replicates", "confidence"],
+      "properties": {
+        "seed": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "replicates": { "type": "integer", "minimum": 100, "maximum": 1000000 },
+        "confidence": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authenticity"],
+      "properties": {
+        "sourceUrl": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "sourceCommit": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "license": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "notes": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "authenticity": { "enum": ["UNVERIFIED", "LOCALLY_ATTESTED"] }
+      }
+    }
+  },
+  "$defs": {
+    "scalar": { "type": ["string", "number", "boolean", "null"] },
+    "benchmark": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "items"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "version": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10000,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "stratum"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1, "maxLength": 300 },
+              "stratum": { "type": "string", "minLength": 1, "maxLength": 200 }
+            }
+          }
+        }
+      }
+    },
+    "system": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "label": { "type": "string", "minLength": 1, "maxLength": 500 }
+      }
+    },
+    "systems": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["A", "B"],
+      "properties": {
+        "A": { "$ref": "#/$defs/system" },
+        "B": { "$ref": "#/$defs/system" }
+      }
+    },
+    "coordinate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "values"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/scalar" }
+        },
+        "description": { "type": "string" },
+        "cost": { "type": "number", "minimum": 0 }
+      }
+    },
+    "protocolSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "version", "coordinates"],
+      "properties": {
+        "kind": { "const": "FiniteProtocolSchema" },
+        "version": { "const": 1 },
+        "coordinates": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": { "$ref": "#/$defs/coordinate" }
+        }
+      }
+    },
+    "protocol": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/scalar" }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["itemId", "a", "b"],
+      "properties": {
+        "itemId": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "a": { "enum": [0, 1] },
+        "b": { "enum": [0, 1] }
+      }
+    },
+    "world": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["worldId", "protocol", "outcomes"],
+      "properties": {
+        "worldId": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "protocol": { "$ref": "#/$defs/protocol" },
+        "outcomes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10000,
+          "items": { "$ref": "#/$defs/outcome" }
+        },
+        "declaredConclusion": { "enum": ["MODEL_A", "MODEL_B", "INCONCLUSIVE"] }
+      }
+    }
+  }
+}

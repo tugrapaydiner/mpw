@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tugrapaydiner.github.io/mpw/schemas/signed-artifact-identity-v1.schema.json",
+  "title": "MPW Signed Artifact Identity v1",
+  "description": "Detached Ed25519 signature over a canonical artifact identity statement. Trust requires an independently anchored public key.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "version",
+    "algorithm",
+    "statement",
+    "canonicalStatement",
+    "keyFingerprint",
+    "signatureBase64Url",
+    "signatureId"
+  ],
+  "properties": {
+    "kind": { "const": "SignedArtifactIdentity" },
+    "version": { "const": 1 },
+    "algorithm": { "const": "Ed25519" },
+    "statement": { "$ref": "#/$defs/statement" },
+    "canonicalStatement": { "type": "string", "minLength": 2 },
+    "keyFingerprint": { "$ref": "#/$defs/sha256" },
+    "signatureBase64Url": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "minLength": 1
+    },
+    "signatureId": {
+      "type": "string",
+      "pattern": "^mpw-signature-v1-[0-9a-f]{16}$"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "statement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "version",
+        "artifactKind",
+        "artifactId",
+        "artifactHash",
+        "issuer",
+        "purpose"
+      ],
+      "properties": {
+        "kind": { "const": "ArtifactIdentityStatement" },
+        "version": { "const": 1 },
+        "artifactKind": { "type": "string", "minLength": 1 },
+        "artifactId": { "type": "string", "minLength": 1 },
+        "artifactHash": { "$ref": "#/$defs/sha256" },
+        "issuer": { "type": "string", "minLength": 1 },
+        "purpose": { "const": "artifact-content-authentication" }
+      }
+    }
+  }
+}

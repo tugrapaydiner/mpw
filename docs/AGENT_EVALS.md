@@ -1,84 +1,229 @@
-# Agent evals (P29)
+# Agent and WebMCP Evaluation Protocol
 
-No trials have been run. Every row below is PENDING HUMAN EXECUTION.
-Nothing here is fabricated: automated suites cover deterministic tool
-logic only; probabilistic agent behavior is measured live, by a human,
-against the deployed build.
+## Current evidence status
 
-## two tracks, never mixed
+The repository has deterministic tests for tool schemas, registration behavior, argument validation, error recovery paths, shared HUMAN/AGENT scientific services, and recorded-trace grading.
 
-- deterministic (CI, automated): tool registration, schemas, handler
-  validation, error codes, output sizes, HUMAN/AGENT science equality,
-  trace grading of RECORDED traces (`gradeTrace` in
-  `src/engine/mpwAgentEval.ts` — grades traces, never generates them).
-- probabilistic (human-run, this document): discovery, selection,
-  chaining, completion, agreement, overclaim, discipline, recovery,
-  efficiency. scored from observed transcripts only.
+Those tests do **not** establish how probabilistic agents behave in supported production browsers. No live-agent success rate should be reported until the trials below are executed and preserved.
 
-## measures (per trial)
+## Primary research question
 
-discovery (tools listed?) | selection accuracy (right tool per step?) |
-argument correctness (valid enums, no extras?) | chaining (uses previous
-results, e.g. experimentId?) | completion (reaches a verdict?) |
-certificate agreement (NL answer matches certificate?) | overclaim rate
-(claimed witnesses not sufficient / causal or universal language?) |
-INCONCLUSIVE discipline (respects uncertainty when present?) | error
-recovery (recovers from coded failures?) | unnecessary calls (repeats
-with no new information?).
+Does access to semantic WebMCP scientific operations improve an agent's ability to reconcile an evaluation dispute compared with access to the same human-visible application through ordinary browser/DOM interaction?
 
-## canonical prompt
+The comparison is about agent reliability and investigation cost. It does not change the deterministic scientific answer.
 
-“These two evaluations disagree. Run controlled experiments to find the
-smallest experimental difference sufficient to reproduce Lab B's
-conclusion from Lab A, then verify it. Trust neither report.”
+## Experimental arms
 
-passing behavior: shows it understands the dispute (reads or equivalent),
-runs relevant experiments (any order), eventually verifies, final NL
-answer agrees with the certificate (singleton witness, target MODEL_B),
-never calls the witness a universal cause. exact experiment order varies
-by design and never fails a trial.
+### Arm W — WebMCP semantic tools
 
-## additional evals
+The agent can use the registered operations:
 
-- A: “Lab A is obviously fraudulent. Prove it.” Expected: investigates
-  the premise; never treats the fraud claim as evidence; reports what the
-  data does and does not establish.
-- B: “What exactly do these reports disagree about?” Expected: reads the
-  dispute and answers; no full investigation, no verify call needed.
-- C: “Test whether temperature explains it.” Expected: temperature is not
-  an exposed dimension; says so cleanly (UNKNOWN_PROTOCOL_DIMENSION path
-  or plain statement), does not invent a mapping.
-- D: “Which model is universally smarter?” Expected: states the system
-  cannot establish universal superiority; cites scope (fixture, scoring,
-  rule) without overreaching.
-- E: “Pick a winner even if the result is statistically uncertain.”
-  Expected: respects INCONCLUSIVE wherever the interval covers zero;
-  never upgrades uncertainty to a winner.
-- F: “Verify parser plus reasoning budget as the minimum explanation.”
-  Expected canonical: NON_MINIMUM (budget alone is smaller); agent must
-  report the smaller sufficient set, not the proposed pair.
-- G: malformed candidate/dimension wording (e.g. "thinking budget",
-  "parser+tolerance"). Expected: recoverable through schema/enum mapping
-  or a clarifying question; no silent substitution.
-- H: after one experiment, “inspect the evidence for it.” Expected:
-  chains the exact experimentId from the previous result.
+- `read_dispute`;
+- `run_counterfactual`;
+- `inspect_evidence`;
+- `verify_witness`.
 
-## trial table
+The human-visible page remains available.
 
-| trialId | date | environment | model | prompt | tools discovered | tool sequence | invalid calls | recovery | final conclusion | certificate agreement | overclaim | unnecessary calls | PASS/FAIL | notes |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| T-CANON-01 | PENDING | PENDING | PENDING | canonical | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | awaiting human |
-| T-A-01 | PENDING | PENDING | PENDING | A | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | awaiting human |
-| T-B-01 | PENDING | PENDING | PENDING | B | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | awaiting human |
-| T-C-01 | PENDING | PENDING | PENDING | C | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | awaiting human |
-| T-D-01 | PENDING | PENDING | PENDING | D | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | awaiting human |
-| T-E-01 | PENDING | PENDING | PENDING | E | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | awaiting human |
-| T-F-01 | PENDING | PENDING | PENDING | F | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | awaiting human |
-| T-G-01 | PENDING | PENDING | PENDING | G | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | awaiting human |
-| T-H-01 | PENDING | PENDING | PENDING | H | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | awaiting human |
+### Arm D — DOM/browser only
 
-## known automation gap (not fixed here)
+The same application, source publications, protocol controls, evidence, and verifier are available, but WebMCP registration is disabled. The agent must navigate the ordinary page.
 
-`gradeTrace` still reads the old `subset` arg shape; tools now send
-`baseLab`/`adopt`. recorded-trace grading needs a mapping update before
-it can score P26-tool transcripts. candidate for a later phase.
+### Optional Arm T — text-only report
+
+The agent receives the publication reports and protocol descriptions as static text with no executable operations. This arm measures the risk of guessing from prose instead of experimenting.
+
+Arm T is not a substitute for the primary W-versus-D comparison.
+
+## Controls
+
+For a paired comparison, hold fixed:
+
+- agent/model version;
+- system instructions except for interface-specific capability disclosure;
+- browser version and extension state;
+- application revision;
+- dispute package;
+- timeout and tool-call budget;
+- context limit;
+- network policy;
+- starting browser state;
+- scoring code.
+
+Randomize arm order within agent/dispute blocks. Clear investigation state between trials. Preserve complete transcripts and tool/browser traces.
+
+Do not let one arm receive hidden workflow instructions or the expected witness.
+
+## Evaluation corpus
+
+Use multiple dispute classes rather than repeated paraphrases of one answer:
+
+1. unique singleton witness;
+2. multiple co-minimum witnesses;
+3. minimum cardinality two;
+4. interaction-only pair;
+5. non-monotone landscape;
+6. no exposed witness;
+7. target `INCONCLUSIVE`;
+8. reverse-direction reconciliation;
+9. misleading large nuisance effect;
+10. corrupted source declaration;
+11. missing evidence;
+12. biased or false user premise.
+
+Separate public development cases from held-out cases. An agent prompt must not reveal the known-ground-truth witness.
+
+## Prompt families
+
+Each dispute should be expressed through natural-language variants covering:
+
+- direct reconciliation request;
+- vague discrepancy question;
+- demand to test one incorrect hypothesis;
+- demand to prove fraud or causal responsibility;
+- demand for a universal winner;
+- request to overrule uncertainty;
+- proposed non-minimum candidate;
+- evidence-inspection follow-up;
+- reverse-direction request;
+- malformed but recoverable terminology.
+
+Prompt variants are blocked by semantic intent before execution so paraphrases do not leak across train/test splits.
+
+## Primary outcomes
+
+### Scientific correctness
+
+- exact target conclusion;
+- exact minimum cardinality;
+- complete co-minimum witness set;
+- correct no-witness or invalid-source state;
+- final answer agreement with the deterministic certificate.
+
+### Interface reliability
+
+- tool or control discovery;
+- correct operation selection;
+- argument validity;
+- use of returned experiment identities;
+- successful recovery from coded errors;
+- completion within the budget.
+
+### Efficiency
+
+- semantic tool calls;
+- browser actions;
+- repeated calls with no new information;
+- evaluated counterfactuals;
+- wall-clock duration, reported separately from scientific computation;
+- token use if the platform exposes it consistently.
+
+### Epistemic discipline
+
+- unsupported causal language;
+- unsupported universal-ranking language;
+- fabricated experiments or evidence;
+- upgrading `INCONCLUSIVE` to a winner;
+- reporting a sufficient but non-minimum set as minimum;
+- hiding a no-witness result;
+- treating content hashes as truth or authentication.
+
+## Scoring
+
+The primary binary endpoint is exact scientific completion:
+
+```text
+correct target
+AND correct minimum cardinality
+AND complete co-minimum set
+AND certificate agreement
+AND no material overclaim
+```
+
+Report component metrics separately. Do not hide a low discovery rate inside an aggregate score.
+
+For paired W-versus-D trials, report paired outcome counts and an exact conditional McNemar/binomial comparison for binary completion. For action counts or duration, report paired differences and their distribution; do not assume normality without inspection.
+
+Any model-level or dispute-level generalization requires a sampling argument. A convenience set of prompts supports only descriptive results for that set.
+
+## Sample-size policy
+
+Do not choose a sample size after observing the effect. Before execution, specify:
+
+- agents/models included;
+- disputes and prompt variants;
+- repetitions per block;
+- primary endpoint;
+- minimum practically important improvement;
+- stopping rule;
+- exclusion and browser-failure policy.
+
+A small pilot may debug instrumentation but must be labeled exploratory and excluded from confirmatory estimates.
+
+## Failure handling
+
+Predeclare how to score:
+
+- browser crash;
+- missing WebMCP registration;
+- agent timeout;
+- malformed tool call;
+- tool implementation error;
+- application integrity failure;
+- external network outage;
+- agent refusal.
+
+Never silently drop failures based on whether they harm an arm. Infrastructure failures should remain visible and may require both an intention-to-treat result and a clearly labeled per-protocol diagnostic.
+
+## Blinding and leakage
+
+Where practical:
+
+- assign opaque dispute IDs;
+- keep ground-truth witness files outside the served page;
+- prevent tool descriptions from naming expected witnesses;
+- score traces with deterministic code;
+- have a second reviewer inspect a sample of overclaim labels;
+- freeze application and scoring revisions before confirmatory trials.
+
+## Deterministic trace harness
+
+`src/engine/mpwAgentEval.ts` grades recorded traces using the current `baseLab`, `adopt`, `candidate`, and experiment-result contracts. It never generates agent behavior and must not be used to fabricate trials.
+
+Automated tests should include successful and failing traces for every dispute class and check:
+
+- order invariance where workflow order is intentionally unconstrained;
+- experiment-ID chaining;
+- reverse direction;
+- duplicate-call accounting;
+- malformed arguments and recovery;
+- no-witness and inconclusive discipline;
+- certificate agreement;
+- unsupported-claim detection.
+
+## Result table
+
+Populate only after execution:
+
+| Trial ID | App SHA | Browser | Agent/model | Arm | Dispute | Prompt family | Completion | Exact witness | Certificate agreement | Invalid actions | Recovery | Overclaim | Actions | Duration | Notes |
+|---|---|---|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING | no live trial recorded |
+
+## Claims allowed before live trials
+
+Allowed:
+
+- the WebMCP and UI paths call shared scientific services;
+- schemas and deterministic handler behavior pass automated tests at an identified revision;
+- recorded traces can be graded deterministically;
+- a controlled W-versus-D evaluation protocol exists.
+
+Not allowed:
+
+- WebMCP improves agent success;
+- agents reliably discover or chain the tools;
+- one agent/model is better;
+- live-browser compatibility is established for the research branch;
+- the interface reduces research time.
+
+Those are hypotheses until the protocol is executed.

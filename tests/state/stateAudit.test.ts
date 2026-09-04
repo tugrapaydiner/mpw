@@ -26,7 +26,12 @@ describe("state audit", () => {
     expect(human.ok && agent.ok).toBe(true);
     if (!human.ok || !agent.ok) return;
     const { ...agentRest } = agent as unknown as Record<string, unknown>;
+    expect(agentRest.contentTrust).toMatchObject({
+      classification: "UNTRUSTED_SCIENTIFIC_DATA",
+      instructionSemantics: false,
+    });
     delete (agentRest as { ok?: boolean }).ok;
+    delete agentRest.contentTrust;
     expect(agentRest).toEqual((human as { result: unknown }).result);
   });
 

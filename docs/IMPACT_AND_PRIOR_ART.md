@@ -1,114 +1,63 @@
-# impact and prior art (P38, 2026-09-03)
+# Impact and Prior Art
 
-researched from primary sources today. no confirmation bias: the strongest
-adjacent work is cited as limiting our novelty, not hidden.
+This historical filename is retained for compatibility. The current, source-checked research review is:
 
-## REAL PROBLEM
+[`RESEARCH_LANDSCAPE.md`](RESEARCH_LANDSCAPE.md)
 
-evaluation outcomes depend on harness/protocol/scaffolding — now a
-headline 2026 empirical consensus, not our conjecture:
-- Epoch AI benchmark-reliability study: scaffold-only variation up to
-  15pp on SWE-bench Verified; scaffold choice "the single biggest
-  impact"; same model scores 74–80% across libraries (the-decoder.com,
-  2026-01-10).
-- Zhang et al., "Stop Comparing LLM Agents Without Disclosing the
-  Harness" (arXiv 2605.23950): harness undisclosed, rarely held constant;
-  same model ranks above or below competitors by harness alone.
-- Harness-Bench (arXiv 2605.27922): 5,194 trajectories; capability must
-  be reported at model–harness configuration level.
-- Fragility grid (arXiv 2608.21382): 4 of 12 models each reach rank one
-  under some defensible harness; "the choice of harness selects the
-  winner"; most-discriminative items are the most fragile.
-- SafetyRepro (arXiv 2605.25492): configuration alone flips pairwise
-  verdicts on every alignment benchmark tested (all six orderings of
-  three models reachable on XSTest).
-- GAIA scaffold study (arXiv 2606.08529): within-model scaffold gaps to
-  28pp; sensitivity grows with capability at hard levels.
-- Reasoning benchmarks (arXiv 2504.07086): decoding/seed/prompt/hardware
-  sensitivity; RL gains mostly vanish under re-evaluation.
-- lm-eval lessons (Zou et al., arXiv 2405.14782): telephone game from
-  benchmark to reimplementation; Benchmark Lottery (Dehghani et al.).
-- Unified evaluation framework position (arXiv 2602.03238 / 2605.27898):
-  scores conflate model with stack; standardize the substrate.
+## Conservative position
 
-conflicting reports + irreproducibility are therefore real, current,
-expensive problems — not strawmen.
+MPW does not claim to invent:
 
-## PRIMARY AUDIENCE
+- evaluation harness sensitivity;
+- benchmark implementation variance;
+- multiverse or specification-curve analysis;
+- minimal counterfactual or abductive explanations;
+- hitting-set or subset search;
+- paired bootstrap or McNemar analysis;
+- executable research artifacts;
+- content-addressed evidence;
+- browser-agent tool calling.
 
-evaluation researchers and engineers choosing harnesses; benchmark
-designers; leaderboard readers making deployment decisions; agent-interface
-builders (WebMCP) who need agents to operate evaluations, not just read
-about them.
+The prospective contribution is a specific integration: start from conflicting evaluation endpoints, expose protocol substitutions as semantic scientific operations, evaluate a finite reconciliation landscape, return all globally minimum sufficient witnesses, distinguish exact proof levels, and bind the result into a replayable artifact shared by human and browser-agent workflows.
 
-## CURRENT MANUAL WORKFLOW
+## Evidence of usefulness
 
-read two conflicting reports → suspect the harness → reimplement both
-setups → grid-search configurations by hand → argue about which difference
-matters. weeks of work, no standard artifact, conclusion usually prose.
+Published evaluation research shows that prompts, scaffolds, harnesses, graders, budgets, and configuration choices can materially alter scores and rankings. That establishes the problem class; it does not validate MPW's solution.
 
-## WHY CURRENT WEB UX IS INADEQUATE
+MPW currently contributes three evidence classes:
 
-leaderboards print one number from one harness (fragility grid: "the order
-is not in the data"); reports are static PDFs; nothing on the web lets a
-reader AND an agent jointly rerun the harness variations and certify which
-difference flips the verdict.
+1. known-ground-truth deterministic reconciliation fixtures;
+2. one small external harness-grid study with a retained negative interaction result;
+3. tested portable and replay verification machinery.
 
-## RELEVANT PRIOR ART
+The project still lacks a representative real-dispute corpus, repeated-run real-model study, controlled agent comparison, and independent reproduction.
 
-- harness-effect empirics: all of the above.
-- method: multiverse analysis in ML (NeurIPS 2022, GP-surrogate search
-  over config spaces); specification curves (Simonsohn et al., 2020);
-  fairness multiverse (Simson et al., FAccT 2024); decision-maker
-  multiverse dashboards (Antwerp IRUA).
-- systems: Agent-Native Research Artifacts, Liu et al. (arXiv 2604.24658)
-  + ARA-Labs repo — executable claims, exploration graphs, machine
-  verification seals. closest systems prior.
-- standards: NIST AI RMF 1.0 MEASURE (document TEVV, uncertainty,
-  limitations, deployment-context validity) + GenAI Profile. we align;
-  it is guidance, not a competing system.
+## Novelty rule
 
-## DIRECT COLLISION SEARCH
+Avoid “first,” “unprecedented,” and equivalent language. If later work establishes a new benchmark, theorem, method, or empirical phenomenon, state the exact comparison set and evidence rather than using an unbounded novelty claim.
 
-WebMCP Challenge gallery (webmcp.devpost.com/project-gallery): NOT YET
-PUBLISHED by the managers — collision check impossible as of 2026-09-03.
-no existing system found that starts from two conflicting web-published
-evaluations AND exposes experimental ops to browser agents AND runs
-protocol counterfactuals AND verifies a global minimum-cardinality
-sufficient witness. multiverse work never targets minimum-sufficiency;
-ARA never does counterfactual witness search or browser-agent tooling.
+## Closest conceptual neighbors
 
-## WHAT IS NOT NOVEL
+The current landscape report examines:
 
-harness-dependence itself; bootstrap CIs; exhaustive subset search;
-JCS/SHA provenance; tool-calling agents; the executable-artifact idea.
+- model–harness interactions and ranking instability;
+- multiverse and specification-curve methods;
+- minimal explanations and abductive reasoning;
+- sufficient causes and responsibility;
+- executable and agent-native research artifacts;
+- reproducibility and evidence standards;
+- browser-agent semantic tool interfaces.
 
-## NARROW CONTRIBUTION
+Those areas constrain MPW's novelty and inform its terminology.
 
-one deterministic instrument that operationalizes the 2026
-harness-awareness consensus: conflicting published evaluations in,
-browser-agent-operable counterfactual protocol search,
-verified global-minimum sufficient witness out, content-hashed
-certificate, human and agent sharing one audited state.
+## Current impact claim
 
-## UNSAFE CLAIMS (never make)
+The strongest defensible claim is:
 
-causality ("budget causes…"), universality ("MODEL_B is better"),
-real-model claims, "first to notice harness effects", "first
-executable science", any ranking of real systems.
+> MPW is a serious prototype for producing exact, inspectable, and agent-operable descriptive reconciliations over an explicitly exposed finite protocol space.
 
-## REMAINING DIFFERENTIATION
+It is not yet evidence that this workflow reduces real research cost, improves agent reliability, or resolves a broad class of real evaluation disagreements. Those are empirical hypotheses for future studies.
 
-minimum-sufficiency witness + certificate + WebMCP-native operation +
-full determinism in one loop. defensible while the gallery stays dark;
-recheck the moment it publishes.
+## Source policy
 
-## SOURCES
-
-all URLs above (arxiv + doi + nist.gov + devpost), fetched 2026-09-03.
-positioning recommendation: frame as applied instrument for the
-harness-awareness consensus, never as discoverer of the problem. no
-product changes made here; any repositioning needs human decision.
-
-urgency note: challenge deadline is 2026-09-03 1:00pm PDT — today.
-submit + freeze take precedence over further research.
+Current external claims belong in `docs/RESEARCH_LANDSCAPE.md` with primary references and retrieval dates. Deadline notes, unpublished gallery checks, secondary-news summaries, and obsolete challenge positioning are not research evidence and are intentionally omitted here.
