@@ -19,8 +19,12 @@ const DIM_GLOSS =
   "answer_parser (strictness of answer parsing), retry_policy (whether one retry is allowed), " +
   "tool_access (breadth of tool use)";
 
+function codedError(code: string, message: string): Error {
+  return new Error(`${code}: ${message}`);
+}
+
 function argumentError(message: string): Error {
-  return new Error(`TOOL_ARGUMENT_ERROR: ${message}`);
+  return codedError("TOOL_ARGUMENT_ERROR", message);
 }
 
 function rejectExtra(args: Record<string, unknown> | undefined, allowed: readonly string[]): void {
@@ -43,8 +47,12 @@ function asDimensionArray(value: unknown, name: string): string[] {
   const seen = new Set<string>();
   for (const entry of value) {
     if (typeof entry !== "string") throw argumentError(`${name} entries must be strings`);
-    if (!DIM_ENUM.includes(entry)) throw argumentError(`unknown protocol dimension ${entry}`);
-    if (seen.has(entry)) throw argumentError(`duplicate protocol dimension ${entry}`);
+    if (!DIM_ENUM.includes(entry)) {
+      throw codedError("UNKNOWN_PROTOCOL_DIMENSION", `unknown protocol dimension ${entry}`);
+    }
+    if (seen.has(entry)) {
+      throw codedError("DUPLICATE_DIMENSION", `duplicate protocol dimension ${entry}`);
+    }
     seen.add(entry);
   }
   return [...seen].sort();
@@ -52,11 +60,22 @@ function asDimensionArray(value: unknown, name: string): string[] {
 
 function failure(error: unknown): Record<string, unknown> {
   const message = String((error as Error)?.message || error);
-  return {
-    ok: false,
-    code: message.startsWith("TOOL_ARGUMENT_ERROR:") ? "TOOL_ARGUMENT_ERROR" : "UNEXPECTED_TOOL_FAILURE",
-    error: message,
-  };
+  const prefix = message.split(":", 1)[0];
+  const code = [
+    "TOOL_ARGUMENT_ERROR",
+    "UNKNOWN_PROTOCOL_DIMENSION",
+    "DUPLICATE_DIMENSION",
+    "INVALID_BASE_LAB",
+    "UNKNOWN_DISPUTE",
+    "UNKNOWN_EXPERIMENT",
+    "EVIDENCE_INCOMPLETE",
+    "SOURCE_INTEGRITY_FAILURE",
+    "CERTIFICATE_REPLAY_FAILURE",
+    "INVALID_CANDIDATE",
+  ].includes(prefix)
+    ? prefix
+    : "UNEXPECTED_TOOL_FAILURE";
+  return { ok: false, code, error: message };
 }
 
 const contentTrust = {
